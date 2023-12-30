@@ -48,6 +48,39 @@ function Login() {
             console.error('There was an error!', error);
         });
     };
+
+    const loginClinic = () => {
+        // Making a POST request to the server
+        fetch('http://localhost:3100/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(credentials)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            // Store the token and user type in local storage or context/state management
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userType', data.userType);
+    
+            // Redirect based on user type
+            if (data.userType === 'admin') {
+                window.location.href = '/admin-clinic';
+            } else if (data.userType === 'patient-clinic') {
+                window.location.href = '/patient';
+            } else if (data.userType === 'doctor') {
+                window.location.href = '/doctor';
+            }  else
+            window.location.href='/';
+        // Handle response data as needed (e.g., set user data, redirect, etc.)
+        })
+        .catch(error => {
+            console.error('There was an error!', error);
+            alert(error.message); // Display an error message to the user
+        });
+    }
     
 
     return (
@@ -73,10 +106,12 @@ function Login() {
                     className="form-control"
                 />
             </div>
-            <button type="submit" className="btn btn-primary">Login</button>
-            <button type="button" className="btn btn-secondary ms-5" onClick={() => window.location.href='/register-patient'}>Register As Patient</button>
+            <button type="submit" className="btn btn-primary">Login In Pharmacy</button>
+            <button type="button" className="btn btn-primary ms-5" onClick={loginClinic} >Login In Clinic</button>
+            <button type="button" className="btn btn-secondary ms-5" onClick={() => window.location.href='/register-patient'}>Register As Pharmacy Patient</button>
             <button type="button" className="btn btn-secondary ms-5" onClick={() => window.location.href='/register-pharmacist'}>Register As Pharmacist</button>
-
+            <button type="button" className="btn btn-secondary ms-5" onClick={() => window.location.href='/register-patient-clinic'}>Register As Clinic Patient</button>
+            <button type="button" className="btn btn-secondary ms-5" onClick={() => window.location.href='/register-doctor'}>Register As Doctor</button>
 
         </form>
 
