@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Form, Button, Modal, FormControl,DropdownButton, Dropdown  } from 'react-bootstrap';
+import { Card, Form, Button, Modal, FormControl, DropdownButton, Dropdown } from 'react-bootstrap';
 
 const Medicines = ({ role }) => {
   const [medicines, setMedicines] = useState([]);
@@ -142,12 +142,12 @@ const Medicines = ({ role }) => {
     }
   };
 
- // Function to remove medicine from cart
- const removeFromCart = (medicineId) => {
-  axios.delete(`http://localhost:3000/removeMedicineFromCart/${patientId}`, { data: { medicine: medicineId } })
-    .then(() => fetchCart())
-    .catch(error => console.error('Error removing medicine from cart:', error));
-};
+  // Function to remove medicine from cart
+  const removeFromCart = (medicineId) => {
+    axios.delete(`http://localhost:3000/removeMedicineFromCart/${patientId}`, { data: { medicine: medicineId } })
+      .then(() => fetchCart())
+      .catch(error => console.error('Error removing medicine from cart:', error));
+  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -156,6 +156,23 @@ const Medicines = ({ role }) => {
   const handleFilterChange = (e) => {
     setFilter(e.target.value);
   };
+
+  const fileToByteString = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const arrayBuffer = event.target.result;
+            const byteArray = new Uint8Array(arrayBuffer);
+            let byteString = '';
+            for (let i = 0; i < byteArray.byteLength; i++) {
+                byteString += String.fromCharCode(byteArray[i]);
+            }
+            resolve(byteString);
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsArrayBuffer(file);
+    });
+};
 
   const handleAddMedicine = (medicineData) => {
     axios.post('http://localhost:3000/addMedicine', medicineData)
@@ -205,10 +222,11 @@ const Medicines = ({ role }) => {
     setIngredients(newIngredients);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const medicineData = Object.fromEntries(formData.entries());
+    medicineData.picture = await fileToByteString(medicineData.picture); // Convert file to byte string
     medicineData.ingredients = ingredients; // Include ingredients in the data
     // If 'use' is not already part of formData, you can manually add it
     // medicineData.use = formData.get('use'); 
@@ -232,8 +250,8 @@ const Medicines = ({ role }) => {
     <div key={item.medicine._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
       <span>{item.medicine.name} - Quantity: {item.quantity}</span>
       <div>
-        <Button variant="primary" onClick={() => handleCartChange(item.medicine._id, item.quantity+1)}>Increase</Button>
-        <Button variant="secondary" onClick={() => handleCartChange(item.medicine._id, item.quantity-1)} disabled={item.quantity === 1}>Decrease</Button>
+        <Button variant="primary" onClick={() => handleCartChange(item.medicine._id, item.quantity + 1)}>Increase</Button>
+        <Button variant="secondary" onClick={() => handleCartChange(item.medicine._id, item.quantity - 1)} disabled={item.quantity === 1}>Decrease</Button>
         <Button variant="danger" onClick={() => removeFromCart(item.medicine._id)}>Remove</Button>
       </div>
     </div>
@@ -268,7 +286,7 @@ const Medicines = ({ role }) => {
             <Modal.Body>
               {cart.length > 0 ? cart.map(renderCartItem) : <p>Your cart is empty.</p>}
               <p>Total Amount: ${totalAmount.toFixed(2)}</p>
-           
+
               {cart.length > 0 && (
                 <>
                   <DropdownButton id="dropdown-item-button" title={selectedAddress || "Select Address"}>
@@ -279,24 +297,24 @@ const Medicines = ({ role }) => {
                     ))}
                   </DropdownButton>
                   <br />
-  
+
                   <br ></br>
                   <Form.Group>
-                    <Form.Check 
+                    <Form.Check
                       type="radio"
                       label="Wallet"
                       name="paymentMethod"
                       value="wallet"
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     />
-                    <Form.Check 
+                    <Form.Check
                       type="radio"
                       label="Credit Card"
                       name="paymentMethod"
                       value="card"
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     />
-                    <Form.Check 
+                    <Form.Check
                       type="radio"
                       label="Cash on Delivery"
                       name="paymentMethod"
@@ -366,6 +384,11 @@ const Medicines = ({ role }) => {
               <Form.Label>Quantity</Form.Label>
               <Form.Control type="number" name="quantity" defaultValue={editingMedicine?.quantity} required />
             </Form.Group>
+            <Form.Group>
+              <Form.Label>Medicine Picture</Form.Label>
+              <Form.Control type="file" name="picture" />
+            </Form.Group>
+
             {/* Ingredients Fields */}
             {ingredients.map((ingredient, index) => (
               <Form.Group key={index}>

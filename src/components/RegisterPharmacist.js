@@ -12,6 +12,12 @@ function RegisterPharmacist() {
         education: ''
     });
 
+    const [files, setFiles] = useState({
+        pharmacist_id: null,
+        pharmacy_degree: null,
+        working_license: null
+    });
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCredentials(prevState => ({
@@ -20,26 +26,55 @@ function RegisterPharmacist() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleFileChange = (e) => {
+        const { name, files } = e.target;
+        setFiles(prevState => ({
+            ...prevState,
+            [name]: files[0] // Only the first file is considered
+        }));
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
     
-        // Making a POST request to the server
+        // Helper function to convert a file to a byte string
+        const fileToByteString = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const arrayBuffer = event.target.result;
+                    const byteArray = new Uint8Array(arrayBuffer);
+                    let byteString = '';
+                    for (let i = 0; i < byteArray.byteLength; i++) {
+                        byteString += String.fromCharCode(byteArray[i]);
+                    }
+                    resolve(byteString);
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        };
+    
+        // Process files and add them to credentials
+        for (const key of Object.keys(files)) {
+            if (files[key]) {
+                credentials[key] = await fileToByteString(files[key]);
+            }
+        }
+
+      
+    
+        // Send the request
         fetch('http://localhost:3000/addPharmacist', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credentials)
         })
         .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            // Handle response data as needed (e.g., set user data, redirect, etc.)
-        })
-        .catch(error => {
-            console.error('There was an error!', error);
-        });
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
     };
+    
 
     return (
         <form onSubmit={handleSubmit} className="p-4 border rounded">
@@ -119,6 +154,35 @@ function RegisterPharmacist() {
                     name="education" 
                     value={credentials.education} 
                     onChange={handleChange}
+                    className="form-control"
+                />
+            </div>
+
+                        {/* File Inputs for pharmacist_id, pharmacy_degree, working_license */}
+                        <div className="mb-3">
+                <label className="form-label">Pharmacist ID:</label>
+                <input 
+                    type="file" 
+                    name="pharmacist_id" 
+                    onChange={handleFileChange}
+                    className="form-control"
+                />
+            </div>
+            <div className="mb-3">
+                <label className="form-label">Pharmacy Degree:</label>
+                <input 
+                    type="file" 
+                    name="pharmacy_degree" 
+                    onChange={handleFileChange}
+                    className="form-control"
+                />
+            </div>
+            <div className="mb-3">
+                <label className="form-label">Working License:</label>
+                <input 
+                    type="file" 
+                    name="working_license" 
+                    onChange={handleFileChange}
                     className="form-control"
                 />
             </div>
