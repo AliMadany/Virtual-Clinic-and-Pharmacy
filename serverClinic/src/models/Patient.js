@@ -1,6 +1,17 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const healthRecordSchema = new mongoose.Schema({
+    name: {
+      type: String,
+      required: true
+    },
+    file: {
+      type: Buffer,
+      required: true
+    }
+  });
+
 const patientSchema = new Schema({
     name: {
         type: String,
@@ -116,7 +127,12 @@ const patientSchema = new Schema({
         float: true,
         required: false,
         default: 0
-    }
+    },
+    health_records: {
+        type: [healthRecordSchema],
+        required: false,
+        default: []
+    },
 });
 
 const Patient = mongoose.model('Patient', patientSchema, 'clinic_patients');

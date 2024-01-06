@@ -871,56 +871,63 @@ const resetPassword = async (req, res) => {
 }
 
 const uploadHealthRecord = async (req, res) => {
-    try{
+    try {
         const { id } = req.params;
-        const { filename, filetype, filesize, filedata } = req.body;
+        const { name, file } = req.body;
 
-        const file = {
-            filename: filename,
-            filetype: filetype,
-            filesize: filesize,
-            filedata: filedata
-        }
+        const fileBuffer = Buffer.from(file, 'binary');
 
         const patient = await patientModel.findById(id);
-        if(!patient){
-            res.status(404).json({message: "Patient not found"});
-        } else {
-            const healthRecord = await healthRecordsModel.find({patient_id: id});
-            if (healthRecord) {
-                healthRecord.files.push(file);
-                await healthRecord.save();
-                res.status(200).json("Health record uploaded successfully!");
-            } else {
-                const healthRecord = await healthRecordsModel.create({ patient_id: id });
-                healthRecord.files.push(file);
-                await healthRecord.save();
-                res.status(200).json("Health record uploaded successfully!");
-            }
+        if (!patient) {
+            return res.status(404).json({ message: "Patient not found" });
         }
-        
+
+        patient.health_records.push({ name, file: fileBuffer });
+        await patient.save();
+
+        res.status(200).json({ message: "Health record uploaded successfully" });
     } catch (error) {
         console.error('Error uploading documents:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
+
 const getHealthRecords = async (req, res) => {
     try {
         const { id } = req.params;
-        
-        const healthRecord = await healthRecordModels.find({patient_id: id});
-        if (healthRecord) {
-            res.status(200).json(healthRecord);
-        } else {
-            res.status(404).json({message: "Health record not found"});
+
+        const patient = await patientModel.findById(id).select('health_records');
+        if (!patient) {
+            return res.status(404).json({ message: "Patient not found" });
         }
 
+        res.status(200).json(patient.health_records);
     } catch (error) {
-        console.error('Error fetching health records:', error);
+        console.error('Error getting health records:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+const removeHealthRecord = async (req, res) => {
+    try {
+        const { patientId, recordName } = req.params;
+
+        const patient = await patientModel.findById(patientId);
+        if (!patient) {
+            return res.status(404).json({ message: "Patient not found" });
+        }
+
+        patient.health_records = patient.health_records.filter(record => record.name !== recordName);
+        await patient.save();
+
+        res.status(200).json({ message: "Health record removed successfully" });
+    } catch (error) {
+        console.error('Error removing health record:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 
 const getPackage = async (req, res) => {
     const { id } = req.params;
@@ -1292,4 +1299,4 @@ const getChats = async (req, res) => {
     }
 }
 
-module.exports = { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats };
+module.exports = { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords,removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats };
