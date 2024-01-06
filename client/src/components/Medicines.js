@@ -18,6 +18,7 @@ const Medicines = ({ role }) => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [totalAmount, setTotalAmount] = useState(0);
   const [orderId, setOrderId] = useState(null);
+  const [showArchived, setShowArchived] = useState(false);
 
 
 
@@ -25,6 +26,40 @@ const Medicines = ({ role }) => {
     fetchMedicines();
     fetchCart();
   }, []);
+
+//handle archived files
+
+const toggleArchived = () => {
+  setShowArchived(prevShowArchived => !prevShowArchived);
+};
+
+// Modify the handleArchiveMedicine function to update the state
+const handleArchiveMedicine = (medicineId) => {
+  axios.put(`http://localhost:3000/archiveMedicine/${medicineId}`)
+    .then(() => {
+      setMedicines(prevMedicines =>
+        prevMedicines.map(med => 
+          med._id === medicineId ? { ...med, archived: true } : med
+        )
+      );
+      alert('Medicine archived successfully!');
+    })
+    .catch(error => console.error('Error archiving medicine:', error));
+};
+
+// Modify the handleUnarchiveMedicine function to update the state
+const handleUnarchiveMedicine = (medicineId) => {
+  axios.put(`http://localhost:3000/unarchiveMedicine/${medicineId}`)
+    .then(() => {
+      setMedicines(prevMedicines =>
+        prevMedicines.map(med => 
+          med._id === medicineId ? { ...med, archived: false } : med
+        )
+      );
+      alert('Medicine unarchived successfully!');
+    })
+    .catch(error => console.error('Error unarchiving medicine:', error));
+};
 
 
   const fetchAddresses = () => {
@@ -103,11 +138,15 @@ const Medicines = ({ role }) => {
     fetchCart(); // Refresh the cart
   };
 
-  const fetchMedicines = () => {
-    axios.get('http://localhost:3000/medicines')
-      .then(response => setMedicines(response.data))
-      .catch(error => console.error('Error fetching medicines:', error));
-  };
+  // Adjust the fetchMedicines function to handle the 'archived' field, if necessary
+const fetchMedicines = () => {
+  axios.get('http://localhost:3000/medicines')
+    .then(response => {
+      // Assuming the response will have a field 'archived' to indicate the status
+      setMedicines(response.data.map(med => ({ ...med, archived: !!med.archived })));
+    })
+    .catch(error => console.error('Error fetching medicines:', error));
+};
 
   const fetchCart = () => {
     axios.get(`http://localhost:3000/getCart/${patientId}`)
@@ -258,10 +297,14 @@ const Medicines = ({ role }) => {
   );
 
 
+  
   const filteredMedicines = medicines.filter(medicine =>
     medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    medicine.use.toLowerCase().includes(filter.toLowerCase())
+    medicine.use.toLowerCase().includes(filter.toLowerCase()) &&
+    (showArchived ? medicine.archived : userRole === 'pharmacist' || !medicine.archived)
   );
+  
+
 
   return (
     <div>
@@ -272,8 +315,14 @@ const Medicines = ({ role }) => {
         <FormControl type="text" placeholder="Filter by Use" className="mr-sm-2" onChange={handleFilterChange} />
         <br />
         {userRole === 'pharmacist' && <Button variant="primary" onClick={() => handleModalShow()}>Add Medicine</Button>}
+
       </Form>
       <br />
+{userRole === 'pharmacist' && (
+  <div style={{ marginBottom: '1rem' }}>
+    <Button variant="info" onClick={toggleArchived}>{showArchived ? 'Hide Archived' : 'Show Archived'}</Button>
+  </div>
+)}
 
       {/* Cart Icon and Modal */}
       {userRole === 'patient' && (
@@ -333,7 +382,7 @@ const Medicines = ({ role }) => {
 
       {/* Medicines List */}
       <div className="medicine-list" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
-        {medicines.filter(medicine =>
+        {filteredMedicines.filter(medicine =>
           medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
           medicine.use.toLowerCase().includes(filter.toLowerCase())
         ).map(medicine => (
@@ -343,6 +392,11 @@ const Medicines = ({ role }) => {
               <Card.Title>{medicine.name}</Card.Title>
               <Card.Text>Price: ${medicine.price}</Card.Text>
               <Card.Text>Description: {medicine.description}</Card.Text>
+              {userRole === 'pharmacist' && (
+        medicine.archived ?
+          <Button variant="secondary" onClick={() => handleUnarchiveMedicine(medicine._id)}>Unarchive</Button> :
+          <Button variant="warning" onClick={() => handleArchiveMedicine(medicine._id)}>Archive</Button>
+      )}
               {userRole === 'patient' && (
                 <>
                   <Button variant="primary" onClick={() => addToCart(medicine._id)}>Add to Cart</Button>
@@ -351,6 +405,8 @@ const Medicines = ({ role }) => {
             </Card.Body>
           </Card>
         ))}
+
+        
       </div>
 
 
