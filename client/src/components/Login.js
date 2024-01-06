@@ -68,8 +68,8 @@ function Login() {
             // Redirect based on user type
             if (data.userType === 'admin') {
                 window.location.href = '/admin-clinic';
-            } else if (data.userType === 'patient-clinic') {
-                window.location.href = '/patient';
+            } else if (data.userType === 'patient') {
+                window.location.href = '/patient-clinic';
             } else if (data.userType === 'doctor') {
                 window.location.href = '/doctor';
             }  else

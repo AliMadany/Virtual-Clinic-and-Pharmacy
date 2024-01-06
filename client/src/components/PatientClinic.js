@@ -31,12 +31,12 @@ function PatientClinic() {
           <Col md={3} className="bg-light h-100">
             <Nav className="flex-column mt-3" variant="pills" defaultActiveKey="/doctor/home">
               <Nav.Item>
-                <Nav.Link as={Link} to="/patient/doctors">Doctors</Nav.Link>
-                <Nav.Link as={Link} to="/patient/prescriptions">Prescriptions</Nav.Link>
-                <Nav.Link as={Link} to="/patient/family-members">Family Members</Nav.Link>
-                <Nav.Link as={Link} to="/patient/appointments">Appointments</Nav.Link>
-                <Nav.Link as={Link} to="/patient/Patient-Packages">Health Pakages</Nav.Link>
-                <Nav.Link as={Link} to="/patient/medical-history">Medical History</Nav.Link>
+                <Nav.Link as={Link} to="/patient-clinic/doctors">Doctors</Nav.Link>
+                <Nav.Link as={Link} to="/patient-clinic/prescriptions">Prescriptions</Nav.Link>
+                <Nav.Link as={Link} to="/patient-clinic/family-members">Family Members</Nav.Link>
+                <Nav.Link as={Link} to="/patient-clinic/appointments">Appointments</Nav.Link>
+                <Nav.Link as={Link} to="/patient-clinic/Patient-Packages">Health Pakages</Nav.Link>
+                <Nav.Link as={Link} to="/patient-clinic/medical-history">Medical History</Nav.Link>
 
               
 
