@@ -7,16 +7,18 @@ const SalesReport = () => {
   const [error, setError] = useState('');
 
   const fetchSalesReport = async () => {
-    try {
-      const response = await axios.get(`http://localhost:3000/getSalesReport/${month}`);
-      setSales(response.data);
-      setError('');
-    } catch (error) {
-      console.error('Error fetching sales report:', error);
-      setError('Failed to fetch sales report. Please try again later.');
-      setSales(null);
-    }
-  };
+  try {
+    // Assuming your backend function is expecting just the month in 'YYYY-MM' format
+    const response = await axios.get(`http://localhost:3000/getSalesReport/${month}`);
+    setSales(response.data);
+    setError('');
+  } catch (error) {
+    console.error('Error fetching sales report:', error);
+    setError('Failed to fetch sales report. Please try again later.');
+    setSales(null);
+  }
+};
+
 
   return (
     <div>
@@ -33,7 +35,12 @@ const SalesReport = () => {
         <button onClick={fetchSalesReport}>Get Sales Report</button>
       </div>
       {error && <div className="error">{error}</div>}
-      {sales !== null && <div><h3>Total Sales for {month}:</h3><p>{sales}</p></div>}
+      {sales !== null && (
+        <div>
+          <h3>Total Sales for {month}:</h3>
+          <p>{sales}</p>
+        </div>
+      )}
     </div>
   );
 };
