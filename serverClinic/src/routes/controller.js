@@ -1299,4 +1299,19 @@ const getChats = async (req, res) => {
     }
 }
 
-module.exports = { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords,removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats };
+const checkPatientDoctorChat = async (req, res) => {
+    const { id, doctor_id } = req.params;
+    try {
+        const appointments = await appointmentModel.find({ patient_id: id, doctor_id: doctor_id });
+        if (appointments.length > 0) {
+            res.status(200).json(true);
+        } else {
+            res.status(200).json(false);
+        }
+    }
+    catch (error) {
+        res.status(409).json({ message: error.message });
+    }
+}
+
+module.exports = { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords,removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat };
