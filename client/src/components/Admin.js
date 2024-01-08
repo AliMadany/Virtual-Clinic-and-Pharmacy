@@ -16,6 +16,8 @@ import AdminMedicines from './AdminMedicines';
 import Medicines from './Medicines';
 import Logout from './Logout';
 import ChangePassword from './ChangePassword';
+import SalesReport from './SalesReport'; 
+
 
 function Admin() {
     return (
@@ -39,6 +41,12 @@ function Admin() {
               <Nav.Item>
                 <Nav.Link as={Link} to="/admin/medicines">Medicines</Nav.Link>
               </Nav.Item>
+              <Nav.Item>
+               <Nav.Link as={Link} to="/admin/sales">Sales</Nav.Link>
+              </Nav.Item>
+
+
+
 
 
               <ChangePassword></ChangePassword>
@@ -53,6 +61,7 @@ function Admin() {
               <Route path="pharmacists" element={<AdminPharmacists />} />
               <Route path="patients" element={<AdminPatients />} />
               <Route path="medicines" element={<Medicines role="admin"/>} />
+              <Route path="sales" element={<SalesReport />} />
               {/* ... Other admin components can go here */}
               {/* <Route path="*" element={<h1>Admin 404 Not Found</h1>} /> */}
             </Routes>

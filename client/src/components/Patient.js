@@ -14,6 +14,7 @@ import AdminPharmacists from './AdminPharmacists';
 import AdminPatients from './AdminPatients';
 import AdminMedicines from './AdminMedicines';
 import Medicines from './Medicines';
+import PatientPrescriptions from './PatientPrescriptions';
 import Logout from './Logout';
 import ChangePassword from './ChangePassword';
 import axios from 'axios';
@@ -102,6 +103,9 @@ function Patient() {
             <Nav.Item>
               <Button onClick={() => { setShowModalOrders(true); fetchOrders(); }}>Orders</Button>
             </Nav.Item>
+            <Nav.Item>
+              <Nav.Link as={Link} to="/patient/PatientPrescriptions">Prescriptions</Nav.Link>
+            </Nav.Item>
 
             <ChangePassword></ChangePassword>
             <Logout> </Logout>
@@ -113,6 +117,9 @@ function Patient() {
         <Col md={9} className="h-100">
           <Routes>
             <Route path="medicines" element={<Medicines role="patient" />} />
+            <Route path="PatientPrescriptions" element={<PatientPrescriptions role="PatientPrescriptions" />} />
+
+
             {/* ... Other admin components can go here */}
             {/* <Route path="*" element={<h1>Patient 404 Not Found</h1>} /> */}
           </Routes>
