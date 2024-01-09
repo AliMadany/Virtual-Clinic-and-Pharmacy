@@ -16,6 +16,7 @@ import AdminPackages from './AdminPackages';
 import Logout from './Logout';
 import AdminAdminsClinic from './AdminAdminsClinic';
 import AdminPatientsClinic from './AdminPatientsClinic';
+import ChangePasswordClinic from './ChangePaswwordClinic';
 // import AdminPharmacists from './AdminPharmacists';
 // import AdminPatients from './AdminPatients';
 // import AdminMedicines from './AdminMedicines';
@@ -44,6 +45,7 @@ function AdminClinic() {
                 <Nav.Link as={Link} to="/admin-clinic/packages">Health Packages</Nav.Link>
               </Nav.Item>
 
+              <ChangePasswordClinic></ChangePasswordClinic>
               <Logout> </Logout>
               {/* ... Other admin routes can go here */}
             </Nav>
