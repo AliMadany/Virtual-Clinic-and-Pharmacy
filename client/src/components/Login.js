@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ForgetPassword from "./ForgetPassword";
+import ForgetPasswordClinic from "./ForgetPasswordClinic";
 
 function Login() {
     const [credentials, setCredentials] = useState({
@@ -118,6 +119,7 @@ function Login() {
         </form>
 
         <ForgetPassword></ForgetPassword>
+        <ForgetPasswordClinic></ForgetPasswordClinic>
         </div>
 
         

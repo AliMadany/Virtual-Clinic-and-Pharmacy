@@ -16,6 +16,7 @@ import PatientMedicalHistory from './PatientMedicalHistory';
 import PatientPackages from './PatientPackages';
 
 import Logout from './Logout';
+import ChangePasswordClinic from './ChangePaswwordClinic';
 // Import your doctor components here
 // import DoctorPatients from './DoctorPatients';
 // import DoctorAppointments from './DoctorAppointments';
@@ -43,6 +44,7 @@ function PatientClinic() {
 
               </Nav.Item>
 
+              <ChangePasswordClinic></ChangePasswordClinic>
               <Logout> </Logout>
               {/* ... Other doctor routes can go here */}
             </Nav>
