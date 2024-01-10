@@ -14,6 +14,7 @@ import Logout from './Logout';
 import ChangePasswordClinic from './ChangePaswwordClinic';
 import axios from 'axios';
 import Wallet from './Wallet';
+import DoctorPrescriptions from './DoctorPrescriptions';
 // Import your doctor components here
 // import DoctorPatients from './DoctorPatients';
 // import DoctorAppointments from './DoctorAppointments';
@@ -57,6 +58,9 @@ function Doctor() {
             <Nav.Item>
               <Nav.Link as={Link} to="/doctor/patients">Patients</Nav.Link>
             </Nav.Item>
+            <Nav.Item>
+              <Nav.Link as={Link} to="/doctor/prescriptions">Prescriptions</Nav.Link>
+            </Nav.Item>
 
             <Nav.Item>
               <Nav.Link onClick={() => setShowContractModal(true)}>View Contract</Nav.Link>
@@ -75,6 +79,8 @@ function Doctor() {
             <Route path="edit" element={<DoctorEdit />} />
             <Route path="appointments" element={<DoctorAppointments />} />
             <Route path="patients" element={<DoctorPatients />} />
+            <Route path="prescriptions" element={<DoctorPrescriptions />} />
+
 
             {/* <Route path="patients" element={<DoctorPatients />} />
               <Route path="appointments" element={<DoctorAppointments />} /> */}

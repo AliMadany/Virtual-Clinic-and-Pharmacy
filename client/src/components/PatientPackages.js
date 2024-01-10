@@ -11,6 +11,8 @@ function PatientPackages() {
   const [familyMembers, setFamilyMembers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [renewalDate , setRenewalDate] = useState(null);
+  const [canceelledOn , setCancelledOn] = useState(null);
 
 
   useEffect(() => {
@@ -32,7 +34,11 @@ function PatientPackages() {
   const fetchMyPackage = () => {
     axios.get('http://localhost:3100/getPatientById/' + localStorage.getItem('userId'))
       .then(response => {
-        setMyPackage([response.data.health_package]);
+        if(response.data.health_package){
+          setMyPackage([response.data.health_package]);
+        }else{
+          setMyPackage([]);
+        }
       })
       .catch(error => {
         console.error('Error fetching my package:', error);
@@ -112,6 +118,21 @@ function PatientPackages() {
 
   };
 
+  const unsubscribe = async (familyMemberNationalId = null) => {
+    const patientId = localStorage.getItem('userId');
+    try {
+      await axios.put(`http://localhost:3100/unsubscribePackage/${patientId}`, {
+        family_member: familyMemberNationalId
+      });
+      alert('Unsubscribed successfully');
+      // Refresh data after unsubscribe
+      fetchMyPackage();
+      fetchFamilyMembers();
+    } catch (error) {
+      console.error('Error unsubscribing:', error);
+      alert('Error unsubscribing');
+    }
+  };
 
   return (
     <div>
@@ -159,6 +180,9 @@ function PatientPackages() {
               <td>{pkg.session_discount * 100}%</td>
               <td>{pkg.medicine_discount * 100}%</td>
               <td>{pkg.family_discount * 100}%</td>
+              <td>
+                {pkg && <Button variant="danger" onClick={() => unsubscribe()}>Unsubscribe</Button>}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -177,6 +201,13 @@ function PatientPackages() {
             <tr key={index}>
               <td>{member.name}</td>
               <td>{member.health_package ? member.health_package.name : 'No Package'}</td>
+              <td>
+                {member.health_package && (
+                  <Button variant="danger" onClick={() => unsubscribe(member.nationalId)}>
+                    Unsubscribe
+                  </Button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

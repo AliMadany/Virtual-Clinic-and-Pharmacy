@@ -515,9 +515,9 @@ const getPrescriptionsByDate = async (req, res) => {
 }
 
 const getPrescriptionsByDoctor = async (req, res) => {
-    const { id, doc_id } = req.params;
+    const { doc_id } = req.params;
     try {
-        const prescriptions = await perscriptionModel.find({ doctor_id: doc_id, patient_id: id });
+        const prescriptions = await perscriptionModel.find({ doctor_id: doc_id}).populate('patient_id');
         res.status(200).json(prescriptions);
     }
     catch (error) {
@@ -558,6 +558,30 @@ const addAppointment = async (req, res) => {
             await appointment.save();
             const notification = await notificationModel.create({ appointment_id: appointment._id, status: "created" });
             await notification.save();
+            // Create a transporter using your email service details
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL,
+                    pass: process.env.PASSWORD
+                }
+            });
+            const doctor = await doctorModel.findById(doctor_id);
+            // Set up the email options
+            const mailOptions = {
+                from: process.env.EMAIL,
+                to: email,
+                subject: 'Clinic Appointment',
+                text: 'You have an appointment on ' + date + ' at ' + start_time + ' with ' + doctor.name + '.'
+            };
+            // Send the email
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.error(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                }
+            });
             res.status(200).json("Appointment created successfully!");
         }
     } catch (error) {
@@ -575,6 +599,30 @@ const editAppointment = async (req, res) => {
         }
         await appointmentModel.findByIdAndUpdate(id, { patient_id, doctor_id, date, start_time, end_time, status });
         await notificationModel.findOneAndUpdate({ appointment_id: id, status: "edited" });
+        // Create a transporter using your email service details
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+        const doctor = await doctorModel.findById(doctor_id);
+        // Set up the email options
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Clinic Appointment',
+            text: 'There is an update on your appointment on ' + date + ' at ' + start_time + ' with ' + doctor.name + '.'
+        };
+        // Send the email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
         res.status(200).json({ message: "Appointment updated successfully" });
     }
     catch (error) {
@@ -591,6 +639,30 @@ const removeAppointment = async (req, res) => {
         }
         await appointmentModel.findByIdAndDelete(id);
         await notificationModel.findOneAndUpdate({ appointment_id: id, status: "deleted" });
+        // Create a transporter using your email service details
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+        const doctor = await doctorModel.findById(doctor_id);
+        // Set up the email options
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Clinic Appointment',
+            text: 'Your appointment on ' + date + ' at ' + start_time + ' with ' + doctor.name + ' has been cancelled.'
+        };
+        // Send the email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
         res.status(200).json({ message: "Appointment deleted successfully" });
     }
     catch (error) {
@@ -977,7 +1049,7 @@ const subscribePackage = async (req, res) => {
     const { id } = req.params;
     const { package_id, payment_type, family_member } = req.body;
     try {
-        const tempPatient = await patientModel.findById(id);
+        var tempPatient = await patientModel.findById(id);
         var patient = await patientModel.findById(id);
         if (family_member) {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
@@ -988,13 +1060,19 @@ const subscribePackage = async (req, res) => {
         const package = await packageModel.findById(package_id);
         if (payment_type === "wallet") {
             try {
-                const amount = package.price;
+                var amount = package.price;
+                if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    amount = amount - fam_package.family_discount;
+                }
                 var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
                     tempPatient.wallet = wallet;
                     patient.health_package = package_id;
+                    patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
+                    await patient.save();
                     res.status(200).json("Package subscribed successfully!");
                 }
                 else {
@@ -1006,10 +1084,15 @@ const subscribePackage = async (req, res) => {
             }
         } else {
             try {
+                var price = package.price;
+                if (family_member && tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    price = price - fam_package.family_discount;
+                }
                 const items = [];
                 const item = {
                     name: "Health Package: " + package.name,
-                    price: package.price,
+                    price: price,
                     quantity: 1
                 };
 
@@ -1028,7 +1111,9 @@ const subscribePackage = async (req, res) => {
                     return res.json().then(json => Promise.reject(json))
                 }).then(async ({ url }) => {
                     patient.health_package = package_id;
+                    patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
+                    await patient.save();
                     res.status(200).json({ url: url });
                 }).catch(e => {
                     console.error(e)
@@ -1063,9 +1148,13 @@ const unsubscribePackage = async (req, res) => {
         var patient = await patientModel.findById(id);
         if (family_member) {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
-            family_members[index].health_package = null;
+
+            patient.family_members[index].health_package = null;
+            patient.family_members[index].cancel_date = new Date().toISOString().split('T')[0];
+
         } else {
             patient.health_package = null;
+            patient.cancel_date = new Date().toISOString().split('T')[0];
         }
         await patient.save();
         res.status(200).json("Package unsubscribed successfully!");
@@ -1091,6 +1180,17 @@ const selectAppointment = async (req, res) => {
         if (payment_type === "wallet") {
             try {
                 const amount = doctor.hourly_rate * 1.1;
+                if (family_member) {
+                    const fam_package = await packageModel.findById(patient.health_package);
+                    if (fam_package) {
+                        amount = amount - fam_package.family_discount;
+                    }
+                } else if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    if (fam_package) {
+                        amount = amount - fam_package.family_discount;
+                    }
+                }
                 var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
@@ -1107,10 +1207,22 @@ const selectAppointment = async (req, res) => {
             }
         } else {
             try {
+                var price = doctor.hourly_rate * 1.1
+                if (family_member && patient.health_package) {
+                    const fam_package = await packageModel.findById(patient.health_package);
+                    if (fam_package) {
+                        price = price - fam_package.family_discount;
+                    }
+                } else if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    if (fam_package) {
+                        price = price - fam_package.family_discount;
+                    }
+                }
                 const items = [];
                 const item = {
                     name: "Appointment with " + doctor.name + "- Date: " + appointment.date + " Time: " + appointment.start_time + " - " + appointment.end_time,
-                    price: doctor.hourly_rate * 1.1,
+                    price: price,
                     quantity: 1
                 };
 
