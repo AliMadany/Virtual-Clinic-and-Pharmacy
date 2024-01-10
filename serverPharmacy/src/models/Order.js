@@ -41,7 +41,7 @@ const orderSchema = new Schema({
     },
     date: {
         type: String,
-        format: Date,
+        format: "date",
         required: true,
     },
     amount: {

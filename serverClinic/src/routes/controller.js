@@ -984,7 +984,6 @@ const subscribePackage = async (req, res) => {
             console.log(index);
             console.log(patient.family_members);
             patient = tempPatient.family_members[index];
-
         }
         const package = await packageModel.findById(package_id);
         if (payment_type === "wallet") {
