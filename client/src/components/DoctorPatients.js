@@ -14,16 +14,61 @@ function DoctorPatients() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [modalContent, setModalContent] = useState('');
 
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [appointmentDetails, setAppointmentDetails] = useState({
+    startTime: '',
+    endTime: ''
+  });
+
 
   useEffect(() => {
     fetchPatients();
   }, []);
 
+  const handleScheduleClick = (patient) => {
+    setSelectedPatient(patient);
+    setShowScheduleModal(true);
+  };
+
+  const handleScheduleChange = (e) => {
+    const { name, value } = e.target;
+    setAppointmentDetails(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleScheduleAppointment = async () => {
+    if (selectedPatient && appointmentDetails.startTime && appointmentDetails.endTime) {
+      try {
+        const response = await axios.post('http://localhost:3100/addAppointment', {
+          patient_id: selectedPatient._id,
+          doctor_id: localStorage.getItem('userId'),
+          date: Date.now(),
+          start_time: appointmentDetails.startTime,
+          end_time: appointmentDetails.endTime,
+          status: 'accepted'
+        });
+        console.log('Appointment scheduled:', response.data);
+        setShowScheduleModal(false);
+      } catch (error) {
+        console.error('Error scheduling appointment:', error);
+      }
+    }
+  };
+
   const fetchPatients = () => {
     axios.get('http://localhost:3100/getPatientsByAppointments/' + localStorage.getItem('userId'))
       .then(response => {
-        setPatients(response.data);
-        setFilteredPatients(response.data);
+        //remove duplicate patient username
+        
+        setPatients(response.data.filter((patient, index, self) =>
+          index === self.findIndex((t) => (
+            t.username === patient.username
+          ))
+        ));
+        setFilteredPatients(response.data.filter((patient, index, self) =>
+          index === self.findIndex((t) => (
+            t.username === patient.username
+          ))
+        ));
       })
       .catch(error => {
         console.log(error);
@@ -166,6 +211,9 @@ function DoctorPatients() {
                 <Button onClick={() => handleDocumentsClick(patient._id)} style={{ marginLeft: '10px' }}>
                   View Documents
                 </Button>
+                <Button onClick={() => handleScheduleClick(patient)} style={{ marginLeft: '10px' }}>
+                  Schedule Follow Up
+                </Button>
               </td>
             </tr>
           ))}
@@ -256,6 +304,29 @@ function DoctorPatients() {
           <Button variant="secondary" onClick={handleCloseViewModal}>
             Close
           </Button>
+        </Modal.Footer>
+      </Modal>
+
+           {/* Schedule Follow-Up Modal */}
+           <Modal show={showScheduleModal} onHide={() => setShowScheduleModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Schedule Follow-Up for {selectedPatient?.username}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Start Time</Form.Label>
+              <Form.Control type="datetime-local" name="startTime" onChange={handleScheduleChange} />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>End Time</Form.Label>
+              <Form.Control type="datetime-local" name="endTime" onChange={handleScheduleChange} />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>Close</Button>
+          <Button variant="primary" onClick={handleScheduleAppointment}>Schedule</Button>
         </Modal.Footer>
       </Modal>
     </div>

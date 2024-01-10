@@ -9,6 +9,7 @@ const notificationModel = require('../models/Notification.js');
 const { default: mongoose, Mongoose } = require('mongoose');
 const OTPModel = require('../models/OTP.js');
 const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
 
 const acceptContract = async (req, res) => {
     const { id } = req.params;
@@ -283,11 +284,22 @@ const getAppointmentsByPatient = async (req, res) => {
 
 }
 
+const getAppointments = async (req, res) => {
+    try {
+        const appointments = await appointmentModel.find({ }).populate('doctor_id');
+        res.status(200).json(appointments);
+    }
+    catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+
+}
+
 
 const getPatientById = async (req, res) => {
     const { id } = req.params;
     try {
-        const patient = await patientModel.findById(id);
+        const patient = await patientModel.findById(id).populate('health_package');
         res.status(200).json(patient);
     }
     catch (error) {
@@ -541,7 +553,7 @@ const addAppointment = async (req, res) => {
         if (appointment) {
             res.status(400).json("Appointment already exists!");
         } else {
-            const appointment = await appointmentModel.create({ patient_id, doctor_id, date, start_time, end_time });
+            const appointment = await appointmentModel.create({ patient_id, doctor_id, date, start_time, end_time, status: req.body.status? req.body.status : "free" });
             await appointment.save();
             const notification = await notificationModel.create({ appointment_id: appointment._id, status: "created" });
             await notification.save();
@@ -999,7 +1011,7 @@ const subscribePackage = async (req, res) => {
 
                 items.push(item);
 
-                fetch('http://localhost:3000/create-checkout-session', {
+                fetch('http://localhost:3100/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1080,7 +1092,7 @@ const selectAppointment = async (req, res) => {
         } else {
             try {
                 const doctor = await doctorModel.findById(appointment.doctor_id);
-                console.log(doctor);
+                //console.log(doctor);
                 const items = [];
                 const item = {
                     name: "Appointment with " + doctor.name + "- Date: " + appointment.date + " Time: " + appointment.start_time + " - " + appointment.end_time,
@@ -1089,9 +1101,9 @@ const selectAppointment = async (req, res) => {
                 };
 
                 items.push(item);
-                console.log(items);
+                //console.log(items);
 
-                fetch('http://localhost:3000/create-checkout-session', {
+                fetch('http://localhost:3100/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1106,6 +1118,7 @@ const selectAppointment = async (req, res) => {
                     res.status(200).json({ url: url });
                 }).catch(e => {
                     console.error(e)
+                    res.status(400).json({ err: error.message });
                 });
             }
             catch (error) {
@@ -1199,8 +1212,15 @@ const revokeFollowUp = async (req, res) => {
 const checkWallet = async (req, res) => {
     const { id } = req.params;
     try {
-        const patient = await patientModel.findById(id);
-        wallet = patient.wallet;
+        let user = await patientModel.findById(id);
+        if(!user) {
+            user = await doctorModel.findById(id);
+        }
+        if(!user) {
+            user = await adminModel.findById(id);
+        }
+        
+        wallet = user.wallet;
         res.status(200).json(wallet);
     } catch (error) {
         res.status(400).json({ err: error.message });
@@ -1335,4 +1355,4 @@ const checkPatientDoctorChat = async (req, res) => {
     }
 }
 
-module.exports = { acceptContract, addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat };
+module.exports = { getAppointments, acceptContract, addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat };

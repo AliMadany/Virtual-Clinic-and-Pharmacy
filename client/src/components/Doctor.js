@@ -13,6 +13,7 @@ import DoctorPatients from './DoctorPatients';
 import Logout from './Logout';
 import ChangePasswordClinic from './ChangePaswwordClinic';
 import axios from 'axios';
+import Wallet from './Wallet';
 // Import your doctor components here
 // import DoctorPatients from './DoctorPatients';
 // import DoctorAppointments from './DoctorAppointments';
@@ -60,6 +61,8 @@ function Doctor() {
             <Nav.Item>
               <Nav.Link onClick={() => setShowContractModal(true)}>View Contract</Nav.Link>
             </Nav.Item>
+
+            <Wallet></Wallet>
 
             <ChangePasswordClinic></ChangePasswordClinic>
             <Logout></Logout>

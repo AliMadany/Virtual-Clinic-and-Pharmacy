@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const MongoURI = process.env.MONGO_URI;
-const { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat, removeHealthRecord, acceptContract } = require('./routes/controller');
+const { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat, removeHealthRecord, acceptContract, getAppointments } = require('./routes/controller');
 const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -75,8 +75,8 @@ app.post('/create-checkout-session', async (req, res) => {
             payment_method_types: ['card'],
             mode: 'payment',
             line_items: lineItems,
-            success_url: 'http://localhost:3001/',
-            cancel_url: 'http://localhost:3001/',
+            success_url: 'http://localhost:3001/patient-clinic/appointments',
+            cancel_url: 'http://localhost:3001/patient-clinic/appointments',
         });
 
         res.json({ url: session.url });
@@ -105,6 +105,7 @@ app.get('/getAppointmentsByDate/:date', getAppointmentsByDate);
 app.get('/getAppointmentsByStatus/:status', getAppointmentsByStatus);
 app.get('/getAppointmentsByPatient/:id', getAppointmentsByPatient);
 app.get('/getAppointmentsByDoctor/:id', getAppointmentsByDoctor);
+app.get('/getAppointments', getAppointments);
 app.get('/getPatientById/:id', getPatientById);
 app.get('/patients', getAllPatients);
 app.get('/getPatientByName/:name', getPatientByName);
