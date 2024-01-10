@@ -536,6 +536,7 @@ const createOrder = async (req, res) => {
                 res.status(400).json("Insufficient quantity");
             } else {
                 medicine.quantity -= item.quantity;
+                await medicine.save();
                 amount += item.quantity * medicine.price;
             }
         }
