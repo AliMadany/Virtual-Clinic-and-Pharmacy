@@ -3,12 +3,16 @@ const mongoose = require('mongoose');
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const MongoURI = process.env.MONGO_URI;
-const { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats } = require('./routes/controller');
+const { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat, removeHealthRecord, acceptContract, getAppointments } = require('./routes/controller');
 const app = express();
 const cors = require("cors");
+const bodyParser = require("body-parser");
 app.use(cors());
 const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY);
 const port = process.env.PORT || "3000";
+
+app.use(bodyParser.json({ limit: '50mb' })); // for parsing application/json
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })); // for parsing application/x-www-form-urlencoded
 
 mongoose.connect(MongoURI)
   .then(() => {
@@ -71,8 +75,8 @@ app.post('/create-checkout-session', async (req, res) => {
             payment_method_types: ['card'],
             mode: 'payment',
             line_items: lineItems,
-            success_url: 'http://localhost:3001/',
-            cancel_url: 'http://localhost:3001/',
+            success_url: 'http://localhost:3001/patient-clinic/appointments',
+            cancel_url: 'http://localhost:3001/patient-clinic/appointments',
         });
 
         res.json({ url: session.url });
@@ -101,6 +105,7 @@ app.get('/getAppointmentsByDate/:date', getAppointmentsByDate);
 app.get('/getAppointmentsByStatus/:status', getAppointmentsByStatus);
 app.get('/getAppointmentsByPatient/:id', getAppointmentsByPatient);
 app.get('/getAppointmentsByDoctor/:id', getAppointmentsByDoctor);
+app.get('/getAppointments', getAppointments);
 app.get('/getPatientById/:id', getPatientById);
 app.get('/patients', getAllPatients);
 app.get('/getPatientByName/:name', getPatientByName);
@@ -132,6 +137,7 @@ app.post("/checkOTP/:username", checkOTP);
 app.put("/resetPassword", resetPassword);
 app.post("/uploadHealthRecord/:id", uploadHealthRecord);
 app.get("/getHealthRecords/:id", getHealthRecords);
+app.get("/removeHealthRecords/:patientId/:recordName", removeHealthRecord);
 app.get("/getPackage/:id", getPackage);
 app.put("/subscribePackage/:id", subscribePackage);
 app.get("/getCurrentPackage/:id", getCurrentPackage);
@@ -145,6 +151,8 @@ app.get("/downloadPrescription/:id", downloadPrescription);
 app.post("/sendMessage:/:id/:receiver_id", sendMessage);
 app.get("/getMessages/:id", getMessages);
 app.get("/getChats/:id", getChats);
+app.get("/checkPatientDoctorChat/:id/:receiver_id", checkPatientDoctorChat);
 app.put("/acceptFollowUp/:id", acceptFollowUp);
 app.put("/revokeFollowUp/:id", revokeFollowUp);
 app.get("/getPendingAppointments", getPendingAppointments);
+app.post("/acceptContract/:id", acceptContract);

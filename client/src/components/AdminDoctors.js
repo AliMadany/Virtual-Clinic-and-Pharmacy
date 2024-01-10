@@ -48,6 +48,33 @@ function AdminDoctors() {
       });
   };
 
+
+  const acceptDoctor = (event, doctorId) => {
+    event.stopPropagation(); // This stops the event from propagating to the row click handler
+
+    axios.put(`http://localhost:3100/acceptDoctor/${doctorId}`)
+      .then(() => {
+        // Update the UI accordingly, e.g., remove the doctor from pendingDoctors
+        setPendingDoctors(pendingDoctors.filter(doctor => doctor._id !== doctorId));
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
+  const rejectDoctor = (event, doctorId) => {
+    event.stopPropagation(); // This stops the event from propagating to the row click handler
+
+    axios.put(`http://localhost:3100/rejectDoctor/${doctorId}`)
+      .then(() => {
+        // Update the UI accordingly, e.g., remove the doctor from pendingDoctors
+        setPendingDoctors(pendingDoctors.filter(doctor => doctor._id !== doctorId));
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
   const handleRowClick = (doctor) => {
     setSelectedDoctor(doctor);
   };
@@ -65,7 +92,7 @@ function AdminDoctors() {
           <Dropdown.Item onClick={() => setFilter('Pending')}>Pending</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
-      
+
       <br />
 
       {/* Display Doctors Table */}
@@ -80,7 +107,7 @@ function AdminDoctors() {
           {(filter === 'Existing' ? doctors : pendingDoctors).map((doctor, index) => (
             <tr key={index} onClick={() => handleRowClick(doctor)}>
               <td>{doctor.name}</td>
-              {filter === 'Existing' && (
+              {filter === 'Existing' ? (
                 <td className="text-center">
                   <BsTrash
                     onClick={(e) => {
@@ -89,6 +116,12 @@ function AdminDoctors() {
                     }}
                     style={{ cursor: 'pointer' }}
                   />
+                </td>
+              ) : (
+                <td className="text-center">
+                  <Button variant="success" onClick={(e) => acceptDoctor(e, doctor._id)}>Accept</Button>{' '}
+                  <Button variant="danger" onClick={(e) => rejectDoctor(e, doctor._id)}>Reject</Button>
+
                 </td>
               )}
             </tr>

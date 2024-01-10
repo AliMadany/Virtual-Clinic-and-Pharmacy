@@ -4,8 +4,10 @@ const adminModel = require('../models/Admin.js');
 const medicineModel = require('../models/Medicine.js');
 const OTPModel = require('../models/OTP.js');
 const orderModel = require('../models/Order.js');
+const notificationModel = require('../models/Notification.js');
 const { default: mongoose } = require('mongoose');
 const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
 
 const addPatient = async (req, res) => {
     const { name, email, username, password, date_of_birth, gender, mobile_number } = req.body;
@@ -536,6 +538,7 @@ const createOrder = async (req, res) => {
                 res.status(400).json("Insufficient quantity");
             } else {
                 medicine.quantity -= item.quantity;
+                await medicine.save();
                 amount += item.quantity * medicine.price;
             }
         }
@@ -730,11 +733,29 @@ const cancelOrder = async (req, res) => {
 const checkWallet = async (req, res) => {
     const { id } = req.params;
     try {
-        let patient = await patientModel.findById(id);
-        if(!patient){
-            patient = await pharmacistModelModel.findById(id);
+        let user = await patientModel.findById(id);
+        if (!user) {
+            user = await pharmacistModel.findById(id);
         }
-        wallet = patient.wallet;
+        if (!user) {
+            user = await adminModel.findById(id);
+        }
+
+        //check if today is the first of monbth add salary to pharmacist
+        const today = new Date();
+        if (today.getDate() === 1 && !user.paidThisMonth) {
+            user.wallet += user.hourly_rate * 8 * 5 * 4;
+            user.paidThisMonth = true;
+            await user.save();
+        }
+
+        //check if today is not the first of month
+        if (today.getDate() !== 1) {
+            user.paidThisMonth = false;
+            await user.save();
+        }
+
+        wallet = user.wallet;
         res.status(200).json(wallet);
     } catch (error) {
         res.status(400).json({ err: error.message });
