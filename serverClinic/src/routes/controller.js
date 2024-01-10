@@ -1057,9 +1057,15 @@ const getCurrentPackage = async (req, res) => {
 
 const unsubscribePackage = async (req, res) => {
     const { id } = req.params;
+    const { family_member } = req.body;
     try {
-        patient = await patientModel.findById(id);
-        patient.health_package = null;
+        var patient = await patientModel.findById(id);
+        if (family_member) {
+            const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+            family_members[index].health_package = null;
+        } else {
+            patient.health_package = null;
+        }
         await patient.save();
         res.status(200).json("Package unsubscribed successfully!");
     } catch (error) {
