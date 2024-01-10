@@ -982,18 +982,19 @@ const subscribePackage = async (req, res) => {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
             console.log(index);
             console.log(patient.family_members);
-            patient = patient.family_members[index];
+            patient = tempPatient.family_members[index];
+
         }
         const package = await packageModel.findById(package_id);
         if (payment_type === "wallet") {
             try {
                 const amount = package.price;
-                var wallet = patient.wallet;
+                var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
                     tempPatient.wallet = wallet;
                     patient.health_package = package_id;
-                    await patient.save();
+                    await tempPatient.save();
                     res.status(200).json("Package subscribed successfully!");
                 }
                 else {
@@ -1027,7 +1028,7 @@ const subscribePackage = async (req, res) => {
                     return res.json().then(json => Promise.reject(json))
                 }).then(async ({ url }) => {
                     patient.health_package = package_id;
-                    await patient.save();
+                    await tempPatient.save();
                     res.status(200).json({ url: url });
                 }).catch(e => {
                     console.error(e)
