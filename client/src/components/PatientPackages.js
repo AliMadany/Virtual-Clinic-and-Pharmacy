@@ -12,7 +12,14 @@ function PatientPackages() {
   const [showModal, setShowModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
+
   useEffect(() => {
+    fetchPackages();
+    fetchMyPackage();
+    fetchFamilyMembers();
+  }, []);
+
+  const fetchPackages = () => {
     axios.get('http://localhost:3100/packages')
       .then(response => {
         setPackages(response.data);
@@ -20,16 +27,17 @@ function PatientPackages() {
       .catch(error => {
         console.error('Error fetching packages:', error);
       });
+  };
 
+  const fetchMyPackage = () => {
     axios.get('http://localhost:3100/getPatientById/' + localStorage.getItem('userId'))
       .then(response => {
         setMyPackage([response.data.health_package]);
       })
       .catch(error => {
-        console.error('Error fetching packages:', error);
+        console.error('Error fetching my package:', error);
       });
-    fetchFamilyMembers();
-  }, []);
+  };
 
   const fetchFamilyMembers = () => {
     // Replace with your actual API endpoint
@@ -41,6 +49,7 @@ function PatientPackages() {
         console.log(error);
       });
   };
+
 
   const handleSubscribe = (pkg) => {
     setSelectedPackage(pkg);
@@ -150,6 +159,24 @@ function PatientPackages() {
               <td>{pkg.session_discount * 100}%</td>
               <td>{pkg.medicine_discount * 100}%</td>
               <td>{pkg.family_discount * 100}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+
+      <h2>Family Members Packages</h2>
+      <Table striped bordered hover>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Package Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          {familyMembers.map((member, index) => (
+            <tr key={index}>
+              <td>{member.name}</td>
+              <td>{member.health_package ? member.health_package.name : 'No Package'}</td>
             </tr>
           ))}
         </tbody>

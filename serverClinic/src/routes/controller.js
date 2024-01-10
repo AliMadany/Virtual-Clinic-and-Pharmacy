@@ -239,7 +239,8 @@ const addFamilyMember = async (req, res) => {
 const getFamilyMembers = async (req, res) => {
     const { id } = req.params;
     try {
-        const patient = await patientModel.findById(id);
+        //populate family members health package
+        const patient = await patientModel.findById(id).populate('family_members.health_package');
         if (!patient) {
             return res.status(404).json({ message: "Patient not found" });
         }
