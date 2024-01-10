@@ -730,7 +730,10 @@ const cancelOrder = async (req, res) => {
 const checkWallet = async (req, res) => {
     const { id } = req.params;
     try {
-        const patient = await patientModel.findById(id);
+        let patient = await patientModel.findById(id);
+        if(!patient){
+            patient = await pharmacistModelModel.findById(id);
+        }
         wallet = patient.wallet;
         res.status(200).json(wallet);
     } catch (error) {
@@ -738,7 +741,7 @@ const checkWallet = async (req, res) => {
     }
 }
 
-const archiveMedicine = async (req, res) => {
+const archiveMedicine = async (req, res) => {     
     const { id } = req.params;
     try {
         const medicine = await medicineModel.findById(id);
