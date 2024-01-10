@@ -984,17 +984,21 @@ const subscribePackage = async (req, res) => {
             console.log(index);
             console.log(patient.family_members);
             patient = tempPatient.family_members[index];
-
         }
         const package = await packageModel.findById(package_id);
         if (payment_type === "wallet") {
             try {
                 const amount = package.price;
+                if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    amount = amount - fam_package.family_discount;
+                }
                 var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
                     tempPatient.wallet = wallet;
                     patient.health_package = package_id;
+                    patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
                     res.status(200).json("Package subscribed successfully!");
                 }
@@ -1007,10 +1011,15 @@ const subscribePackage = async (req, res) => {
             }
         } else {
             try {
+                var price = package.price;
+                if (family_member && tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    price = price - fam_package.family_discount;
+                }
                 const items = [];
                 const item = {
                     name: "Health Package: " + package.name,
-                    price: package.price,
+                    price: price,
                     quantity: 1
                 };
 
@@ -1029,6 +1038,7 @@ const subscribePackage = async (req, res) => {
                     return res.json().then(json => Promise.reject(json))
                 }).then(async ({ url }) => {
                     patient.health_package = package_id;
+                    patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
                     res.status(200).json({ url: url });
                 }).catch(e => {
@@ -1064,9 +1074,13 @@ const unsubscribePackage = async (req, res) => {
         var patient = await patientModel.findById(id);
         if (family_member) {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+
             patient.family_members[index].health_package = null;
+            patient.family_members[index].cancel_date = new Date().toISOString().split('T')[0];
+
         } else {
             patient.health_package = null;
+            patient.cancel_date = new Date().toISOString().split('T')[0];
         }
         await patient.save();
         res.status(200).json("Package unsubscribed successfully!");
@@ -1079,17 +1093,34 @@ const selectAppointment = async (req, res) => {
     const { id } = req.params;
     const { appointment_id, payment_type } = req.body;
     try {
+        const tempPatient = await patientModel.findById(id);
+        var patient = await patientModel.findById(id);
+        if (family_member) {
+            const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+            console.log(index);
+            console.log(patient.family_members);
+            patient = patient.family_members[index];
+        }
         const appointment = await appointmentModel.findById(appointment_id);
+        const doctor = await doctorModel.findById(appointment.doctor_id);
         if (payment_type === "wallet") {
             try {
-                const patient = await patientModel.findById(id);
-                const doctor = await doctorModel.findById(appointment.doctor_id);
-
                 const amount = doctor.hourly_rate * 1.1;
-                var wallet = patient.wallet;
+                if (family_member) {
+                    const fam_package = await packageModel.findById(patient.health_package);
+                    if (fam_package) {
+                        amount = amount - fam_package.family_discount;
+                    }
+                } else if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    if (fam_package) {
+                        amount = amount - fam_package.family_discount;
+                    }
+                }
+                var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
-                    patient.wallet = wallet;
+                    tempPatient.wallet = wallet;
                     await patient.save();
                     res.status(200).json("Appointment selected successfully!");
                 }
@@ -1102,17 +1133,26 @@ const selectAppointment = async (req, res) => {
             }
         } else {
             try {
-                const doctor = await doctorModel.findById(appointment.doctor_id);
-                //console.log(doctor);
+                var price = doctor.hourly_rate * 1.1
+                if (family_member && patient.health_package) {
+                    const fam_package = await packageModel.findById(patient.health_package);
+                    if (fam_package) {
+                        price = price - fam_package.family_discount;
+                    }
+                } else if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    if (fam_package) {
+                        price = price - fam_package.family_discount;
+                    }
+                }
                 const items = [];
                 const item = {
                     name: "Appointment with " + doctor.name + "- Date: " + appointment.date + " Time: " + appointment.start_time + " - " + appointment.end_time,
-                    price: doctor.hourly_rate * 1.1,
+                    price: price,
                     quantity: 1
                 };
 
                 items.push(item);
-                //console.log(items);
 
                 fetch('http://localhost:3100/create-checkout-session', {
                     method: 'POST',
