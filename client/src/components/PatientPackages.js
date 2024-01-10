@@ -34,6 +34,12 @@ function PatientPackages() {
   const fetchMyPackage = () => {
     axios.get('http://localhost:3100/getPatientById/' + localStorage.getItem('userId'))
       .then(response => {
+        if(response.data.renewal_date){
+          setRenewalDate(response.data.renewal_date);
+        }
+        if(response.data.cancel_date){
+          setCancelledOn(response.data.cancel_date);
+        }
         if(response.data.health_package){
           setMyPackage([response.data.health_package]);
         }else{
@@ -162,6 +168,8 @@ function PatientPackages() {
 
 
       <h2>Your Package</h2>
+      <h4>renews on {renewalDate}</h4>
+      <h4>last cancelled on {canceelledOn}</h4>
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -194,6 +202,10 @@ function PatientPackages() {
           <tr>
             <th>Username</th>
             <th>Package Name</th>
+
+            <th>Renews on</th>
+            <th>last cancelled on</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -201,6 +213,9 @@ function PatientPackages() {
             <tr key={index}>
               <td>{member.name}</td>
               <td>{member.health_package ? member.health_package.name : 'No Package'}</td>
+
+              <td>{member.renewal_date}</td>
+              <td>{member.cancel_date}</td>
               <td>
                 {member.health_package && (
                   <Button variant="danger" onClick={() => unsubscribe(member.nationalId)}>

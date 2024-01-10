@@ -1130,6 +1130,72 @@ const subscribePackage = async (req, res) => {
     }
 }
 
+const subscribePres = async (req, res) => {
+    const { id } = req.params;
+    const {  payment_type, payable } = req.body;
+    try {
+        var tempPatient = await patientModel.findById(id);
+        var patient = await patientModel.findById(id);
+        if (payment_type === "wallet") {
+            try {
+                var amount = payable;
+                var wallet = tempPatient.wallet;
+                if (wallet >= amount) {
+                    wallet = wallet - amount;
+                    tempPatient.wallet = wallet;
+                    await tempPatient.save();
+                    await patient.save();
+                    res.status(200).json("Package subscribed successfully!");
+                }
+                else {
+                    res.status(400).json("Insufficient balance!");
+                }
+            }
+            catch (error) {
+                res.status(400).json({ err: error.message });
+            }
+        } else {
+            try {
+                var price = payable;
+ 
+                const items = [];
+                const item = {
+                    name: "prescription " ,
+                    price: payable,
+                    quantity: 1
+                };
+
+                items.push(item);
+
+                fetch('http://localhost:3100/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: items,
+                    })
+                }).then(res => {
+                    if (res.ok) return res.json()
+                    return res.json().then(json => Promise.reject(json))
+                }).then(async ({ url }) => {
+                    await tempPatient.save();
+                    await patient.save();
+                    res.status(200).json({ url: url });
+                }).catch(e => {
+                    console.error(e)
+                });
+            }
+            catch (error) {
+                res.status(400).json({ err: error.message });
+            }
+        }
+        await patient.save();
+    } catch (error) {
+        res.status(400).json({ err: error.message });
+    }
+}
+
 const getCurrentPackage = async (req, res) => {
     const { id } = req.params;
     try {
@@ -1353,7 +1419,8 @@ const checkWallet = async (req, res) => {
 }
 
 const cancelAppointment = async (req, res) => {
-    const { id, user } = req.params;
+    const { id } = req.params;
+    const { user } = req.body;
     try {
         const appointment = await appointmentModel.findById(id);
         if (!appointment) {
@@ -1480,4 +1547,4 @@ const checkPatientDoctorChat = async (req, res) => {
     }
 }
 
-module.exports = { getAppointments, acceptContract, addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat };
+module.exports = { subscribePres, getAppointments, acceptContract, addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat };

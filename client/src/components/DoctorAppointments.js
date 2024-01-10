@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Form, Button,Modal } from 'react-bootstrap';
+import { Table, Form, Button,Modal, FormControl } from 'react-bootstrap';
 import axios from 'axios';
 
 function DoctorAppointments() {
@@ -11,12 +11,74 @@ function DoctorAppointments() {
     start_time: '',
     end_time: ''
   });
+  const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+
 
   const [showUpcomingOnly, setShowUpcomingOnly] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
   }, [showUpcomingOnly]); // Added showUpcomingOnly as a dependency
+
+
+  const handleReschedule = (appointment) => {
+    setRescheduleAppointment(appointment);
+    setShowRescheduleModal(true);
+  };
+
+  const handleAccept = (appointmentId) => {
+    accAppointment(appointmentId);
+  };
+
+  const editAppointment = (appointmentId,status, newStartTime, newEndTime) => {
+    axios.put(`http://localhost:3100/editAppointment/${appointmentId}`, {
+      // patient_id: rescheduleAppointment.patient_id,
+      // doctor_id: localStorage.getItem('userId'),
+      // date: newStartTime ? new Date(newStartTime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      start_time: newStartTime || rescheduleAppointment.start_time,
+      end_time: newEndTime || rescheduleAppointment.end_time,
+      status: status
+    })
+    .then(response => {
+      setShowRescheduleModal(false);
+      fetchAppointments();
+    })
+    .catch(error => {
+      console.error('Error updating appointment:', error);
+    });
+  };
+
+  const handleCancelAppointment = (appointmentId) => {
+    axios.post(`http://localhost:3100/cancelAppointment/${appointmentId}`)
+      .then(response => {
+        alert('Appointment canceled successfully');
+        fetchAppointments(); // Refresh appointments list
+      })
+      .catch(error => {
+        console.error('Error canceling appointment:', error);
+        alert('Error canceling appointment');
+      });
+  };
+
+  const accAppointment = (appointmentId) => {
+    axios.put(`http://localhost:3100/editAppointment/${appointmentId}`, {
+      status: "accepted"
+    })
+    .then(response => {
+      setShowRescheduleModal(false);
+      fetchAppointments();
+    })
+    .catch(error => {
+      console.error('Error updating appointment:', error);
+    });
+  };
+
+
+  const handleRescheduleSubmit = (e) => {
+    e.preventDefault();
+    editAppointment(rescheduleAppointment._id, 'pending', newAppointment.start_time, newAppointment.end_time);
+  };
 
   const fetchAppointments = () => {
     axios.get('http://localhost:3100/getAppointmentsByDoctor/' + localStorage.getItem('userId'))
@@ -151,6 +213,16 @@ function DoctorAppointments() {
               <td>{(appointment.end_time)}</td>
               <td>{appointment.patient_id ? appointment.patient_id.name: '-'}</td>
               <td>{appointment.status}</td>
+              <td>
+                {appointment.status === 'pending' && (
+                  <>
+                    <Button variant="primary" onClick={() => handleReschedule(appointment)}>Reschedule</Button>
+                    <Button variant="success" onClick={() => handleAccept(appointment._id)}>Accept</Button>
+                    <Button variant="danger" onClick={() => handleCancelAppointment(appointment._id)}>Cancel</Button>
+
+                  </>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -185,6 +257,38 @@ function DoctorAppointments() {
             <Button variant="primary" type="submit">
               Create
             </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+            {/* Reschedule Appointment Modal */}
+            <Modal show={showRescheduleModal} onHide={() => setShowRescheduleModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Reschedule Appointment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleRescheduleSubmit}>
+            <Form.Group>
+              <Form.Label>New Start Time:</Form.Label>
+              <FormControl
+                type="datetime-local"
+                name="start_time"
+                value={newAppointment.start_time}
+                onChange={handleNewAppointmentChange}
+                required
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>New End Time:</Form.Label>
+              <FormControl
+                type="datetime-local"
+                name="end_time"
+                value={newAppointment.end_time}
+                onChange={handleNewAppointmentChange}
+                required
+              />
+            </Form.Group>
+            <Button type="submit">Reschedule</Button>
           </Form>
         </Modal.Body>
       </Modal>

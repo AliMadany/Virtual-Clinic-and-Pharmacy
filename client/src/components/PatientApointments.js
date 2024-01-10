@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Form, Button } from 'react-bootstrap';
+import { Table, Form, Button,Modal, FormControl } from 'react-bootstrap';
 import axios from 'axios';
 
 function PatientAppointments() {
@@ -8,6 +8,54 @@ function PatientAppointments() {
   const [filter, setFilter] = useState({ date: '', status: '', doctor: '', showUserAppointments: 'all' });
   const [doctors, setDoctors] = useState([]);
   const userId = localStorage.getItem('userId');
+
+  const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [newAppointment, setNewAppointment] = useState({
+    start_time: '',
+    end_time: ''
+  });
+
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpDetails, setFollowUpDetails] = useState({
+    start_time: '',
+    end_time: '',
+    originalAppointmentId: ''
+  });
+
+  // ... existing useEffect and functions ...
+
+  const handleShowFollowUp = (appointment) => {
+    setFollowUpDetails({ ...followUpDetails, originalAppointmentId: appointment._id, doctor_id: appointment.doctor_id  });
+    setShowFollowUpModal(true);
+  };
+
+  const handleFollowUpChange = (e) => {
+    const { name, value } = e.target;
+    setFollowUpDetails({ ...followUpDetails, [name]: value });
+  };
+
+  const handleScheduleFollowUp = () => {
+    // Add logic to schedule follow-up appointment using backend endpoint
+    axios.post('http://localhost:3100/addAppointment', {
+      patient_id: userId,
+      start_time: followUpDetails.start_time,
+      end_time: followUpDetails.end_time,
+      doctor_id: followUpDetails.doctor_id._id,
+      date: Date.now()
+    }).then(response => {
+      alert('Follow up scheduled successfully!');
+      setShowFollowUpModal(false);
+      fetchAppointments();
+    }).catch(error => {
+      console.error('Error scheduling follow up:', error);
+    });
+  };
+
+  const handleNewAppointmentChange = (e) => {
+    const { name, value } = e.target;
+    setNewAppointment(prev => ({ ...prev, [name]: value }));
+  };
 
   useEffect(() => {
     fetchAppointments();
@@ -59,15 +107,15 @@ function PatientAppointments() {
     if (filter.showUserAppointments === 'upcoming') {
       console.log(filtered)
       filtered = filtered.filter((appointment) => {
-        if(!appointment.patient_id){
+        if (!appointment.patient_id) {
           return false;
         }
-        return new Date(appointment.start_time) > new Date() && appointment.patient_id  && appointment.patient_id == userId 
+        return new Date(appointment.start_time) > new Date() && appointment.patient_id && appointment.patient_id == userId
       }
       );
     } else if (filter.showUserAppointments === 'past') {
       filtered = filtered.filter(appointment =>
-        new Date(appointment.start_time) < new Date()  && appointment.patient_id  && appointment.patient_id == userId
+        new Date(appointment.start_time) < new Date() && appointment.patient_id && appointment.patient_id == userId
       );
     }
 
@@ -77,6 +125,20 @@ function PatientAppointments() {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCancelAppointment = (appointmentId) => {
+    axios.post(`http://localhost:3100/cancelAppointment/${appointmentId}`, {
+      user: 'patient'
+    })
+      .then(response => {
+        alert('Appointment canceled successfully');
+        fetchAppointments(); // Refresh appointments list
+      })
+      .catch(error => {
+        console.error('Error canceling appointment:', error);
+        alert('Error canceling appointment');
+      });
   };
 
   const applyFilter = () => {
@@ -99,6 +161,35 @@ function PatientAppointments() {
       .catch(error => {
         console.error('Error:', error);
         alert("Error processing payment");
+      });
+  };
+
+  const handleReschedule = (appointment) => {
+    setRescheduleAppointment(appointment);
+    setShowRescheduleModal(true);
+  };
+
+
+  const handleRescheduleSubmit = (e) => {
+    e.preventDefault();
+    editAppointment(rescheduleAppointment._id, 'pending', newAppointment.start_time, newAppointment.end_time);
+  };
+
+  const editAppointment = (appointmentId, status, newStartTime, newEndTime) => {
+    axios.put(`http://localhost:3100/editAppointment/${appointmentId}`, {
+      // patient_id: rescheduleAppointment.patient_id,
+      // doctor_id: localStorage.getItem('userId'),
+      // date: newStartTime ? new Date(newStartTime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      start_time: newStartTime || rescheduleAppointment.start_time,
+      end_time: newEndTime || rescheduleAppointment.end_time,
+      status: status
+    })
+      .then(response => {
+        setShowRescheduleModal(false);
+        fetchAppointments();
+      })
+      .catch(error => {
+        console.error('Error updating appointment:', error);
       });
   };
 
@@ -195,13 +286,93 @@ function PatientAppointments() {
                   <>
                     <Button variant="success" onClick={() => handlePayment(appointment._id, 'wallet')}>Pay with Wallet</Button>{' '}
                     <Button variant="primary" onClick={() => handlePayment(appointment._id, 'card')}>Pay with Card</Button>
+
                   </>
+                )}
+                {appointment.status === 'pending' && (
+                  <>
+
+                    <Button variant="primary" onClick={() => handleReschedule(appointment)}>Reschedule</Button>
+
+                    <Button variant="danger" onClick={() => handleCancelAppointment(appointment._id)}>Cancel</Button>
+
+                  </>
+                )}
+                                {new Date(appointment.end_time) < new Date() && (
+                  <Button variant="secondary" onClick={() => handleShowFollowUp(appointment)}>Schedule a Follow-Up</Button>
                 )}
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
+
+      {/* Reschedule Appointment Modal */}
+      <Modal show={showRescheduleModal} onHide={() => setShowRescheduleModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Reschedule Appointment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleRescheduleSubmit}>
+            <Form.Group>
+              <Form.Label>New Start Time:</Form.Label>
+              <FormControl
+                type="datetime-local"
+                name="start_time"
+                value={newAppointment.start_time}
+                onChange={handleNewAppointmentChange}
+                required
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>New End Time:</Form.Label>
+              <FormControl
+                type="datetime-local"
+                name="end_time"
+                value={newAppointment.end_time}
+                onChange={handleNewAppointmentChange}
+                required
+              />
+            </Form.Group>
+            <Button type="submit">Reschedule</Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+           {/* Follow Up Modal */}
+           <Modal show={showFollowUpModal} onHide={() => setShowFollowUpModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Schedule a Follow-Up</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Form.Label>New Start Time:</Form.Label>
+              <FormControl
+                type="datetime-local"
+                name="start_time"
+                value={followUpDetails.start_time}
+                onChange={handleFollowUpChange}
+                required
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>New End Time:</Form.Label>
+              <FormControl
+                type="datetime-local"
+                name="end_time"
+                value={followUpDetails.end_time}
+                onChange={handleFollowUpChange}
+                required
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowFollowUpModal(false)}>Close</Button>
+          <Button variant="primary" onClick={handleScheduleFollowUp}>Schedule Follow-Up</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
