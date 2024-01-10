@@ -5,6 +5,7 @@ const medicineModel = require('../models/Medicine.js');
 const OTPModel = require('../models/OTP.js');
 const orderModel = require('../models/Order.js');
 const notificationModel = require('../models/Notification.js');
+const chatModel = require('../models/Chat.js');
 const { default: mongoose } = require('mongoose');
 const nodemailer = require('nodemailer');
 const fetch = require('node-fetch');
@@ -984,8 +985,7 @@ const checkMedicinesStockHelper = async (req, res) => {
 }
 
 const sendMessage = async (req, res) => {
-    const { id, receiver_id } = req.params;
-    const { message, date, time } = req.body;
+    const { id, receiver_id, message, date, time } = req.body;
     try {
         const chat = await chatModel.findOne({ user1_id: id, user2_id: receiver_id });
         if (!chat) {
@@ -1001,7 +1001,7 @@ const sendMessage = async (req, res) => {
             await chat.save();
         }
 
-        res.status(200).json("Message sent successfully!");
+        res.status(200).json("Message sent successfully");
     }
     catch (error) {
         res.status(409).json({ message: error.message });
@@ -1009,7 +1009,7 @@ const sendMessage = async (req, res) => {
 }
 
 const getMessages = async (req, res) => {
-    const { id, receiver_id } = req.params;
+    const { id, receiver_id } = req.body;
     try {
         const chat = await chatModel.findOne({ user1_id: id, user2_id: receiver_id });
         if (!chat) {
@@ -1025,7 +1025,7 @@ const getMessages = async (req, res) => {
 }
 
 const getChats = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.body;
     try {
         const chats = await chatModel.find({ user1_id: id });
         const chats2 = await chatModel.find({ user2_id: id });
