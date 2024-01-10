@@ -762,7 +762,7 @@ const checkWallet = async (req, res) => {
     }
 }
 
-const archiveMedicine = async (req, res) => {
+const archiveMedicine = async (req, res) => {     
     const { id } = req.params;
     try {
         const medicine = await medicineModel.findById(id);
