@@ -57,12 +57,17 @@ function PatientAppointments() {
     }
 
     if (filter.showUserAppointments === 'upcoming') {
-      filtered = filtered.filter(appointment =>
-        new Date(appointment.start_time) > new Date() && appointment.patient_id === userId
+      console.log(filtered)
+      filtered = filtered.filter((appointment) => {
+        if(!appointment.patient_id){
+          return false;
+        }
+        return new Date(appointment.start_time) > new Date() && appointment.patient_id  && appointment.patient_id == userId 
+      }
       );
     } else if (filter.showUserAppointments === 'past') {
       filtered = filtered.filter(appointment =>
-        new Date(appointment.start_time) < new Date() && appointment.patient_id === userId
+        new Date(appointment.start_time) < new Date()  && appointment.patient_id  && appointment.patient_id == userId
       );
     }
 

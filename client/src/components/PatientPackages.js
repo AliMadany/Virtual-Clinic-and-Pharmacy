@@ -11,6 +11,8 @@ function PatientPackages() {
   const [familyMembers, setFamilyMembers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [renewalDate , setRenewalDate] = useState(null);
+  const [canceelledOn , setCancelledOn] = useState(null);
 
 
   useEffect(() => {
