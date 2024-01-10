@@ -10,7 +10,7 @@ function PatientPrescriptions() {
   const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3100/getPrescriptionsByPatient/65403bf85091f5dce661f3e8')
+    axios.get('http://localhost:3100/getPrescriptionsByPatient/' + localStorage.getItem('userId'))
       .then(response => {
         setPrescriptions(response.data);
         setFilteredPrescriptions(response.data);

@@ -27,7 +27,8 @@ const prescriptionSchema = new Schema({
     },
     patient_id: {
         type: String,
-        required: true
+        required: true,
+        ref: 'Patient'
     },
     date: {
         type: String,
@@ -47,7 +48,7 @@ const prescriptionSchema = new Schema({
     },
     file: {
         type: Buffer,
-        required: true
+        required: false
     },
 });
 
