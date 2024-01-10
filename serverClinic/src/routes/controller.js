@@ -10,6 +10,7 @@ const { default: mongoose, Mongoose } = require('mongoose');
 const OTPModel = require('../models/OTP.js');
 const nodemailer = require('nodemailer');
 const fetch = require('node-fetch');
+const chatModel = require('../../../serverPharmacy/src/models/Chat.js');
 
 const acceptContract = async (req, res) => {
     const { id } = req.params;

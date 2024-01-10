@@ -149,7 +149,7 @@ app.post("/scheduleFollowUpPatient", scheduleFollowUpPatient);
 app.get("/checkWallet/:id", checkWallet);
 app.post("/cancelAppointment/:id", cancelAppointment);
 app.get("/downloadPrescription/:id", downloadPrescription);
-app.post("/sendMessage:/:id/:receiver_id", sendMessage);
+app.post("/sendMessage/:id/:receiver_id", sendMessage);
 app.get("/getMessages/:id", getMessages);
 app.get("/getChats/:id", getChats);
 app.get("/checkPatientDoctorChat/:id/:receiver_id", checkPatientDoctorChat);

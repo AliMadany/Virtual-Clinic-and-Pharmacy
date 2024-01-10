@@ -18,6 +18,7 @@ import PatientPackages from './PatientPackages';
 import Logout from './Logout';
 import ChangePasswordClinic from './ChangePaswwordClinic';
 import Wallet from './Wallet';
+import Chat from './Chat';
 // Import your doctor components here
 // import DoctorPatients from './DoctorPatients';
 // import DoctorAppointments from './DoctorAppointments';
@@ -39,7 +40,7 @@ function PatientClinic() {
                 <Nav.Link as={Link} to="/patient-clinic/appointments">Appointments</Nav.Link>
                 <Nav.Link as={Link} to="/patient-clinic/Patient-Packages">Health Pakages</Nav.Link>
                 <Nav.Link as={Link} to="/patient-clinic/medical-history">Medical History</Nav.Link>
-
+                <Nav.Link as={Link} to="/patient-clinic/chat">Chat</Nav.Link>
               
 
 
@@ -61,7 +62,7 @@ function PatientClinic() {
             <Route path="appointments" element={<PatientAppointments />} />
             <Route path="medical-history" element={<PatientMedicalHistory />} />
             <Route path="Patient-Packages" element={<PatientPackages />} />
-
+            <Route path="chat" element={<Chat />} />
             
               {/* <Route path="patients" element={<DoctorPatients />} />
             //   <Route path="appointments" element={<DoctorAppointments />} /> */}
