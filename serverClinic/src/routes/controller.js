@@ -555,10 +555,8 @@ const addAppointment = async (req, res) => {
         if (appointment) {
             res.status(400).json("Appointment already exists!");
         } else {
-            const appointment = await appointmentModel.create({ patient_id, doctor_id, date, start_time, end_time, status: req.body.status? req.body.status : "free" });
-            await appointment.save();
+            const appointment = await appointmentModel.create({ patient_id, doctor_id, date, start_time, end_time, status: patient_id ? "accepted" : "free" });
             const notification = await notificationModel.create({ appointment_id: appointment._id, status: "created" });
-            await notification.save();
             // Create a transporter using your email service details
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
@@ -641,11 +639,16 @@ const removeAppointment = async (req, res) => {
     const { id } = req.params;
     try {
         const appointment = await appointmentModel.findById(id);
+        console.log(appointment);
+        const doctor_id = appointment.doctor_id;
+        const patient_id = appointment.patient_id;
+        console.log(doctor_id);
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
         await appointmentModel.findByIdAndDelete(id);
         await notificationModel.findOneAndUpdate({ appointment_id: id, status: "deleted" });
+        console.log(appointment);
         // Create a transporter using your email service details
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -663,7 +666,7 @@ const removeAppointment = async (req, res) => {
             from: process.env.EMAIL,
             to: patient_email, doc_email,
             subject: 'Clinic Appointment',
-            text: 'Your appointment has been canceled.\n' + 'Patient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + date + '\nTime: ' + start_time + ' - ' + end_time
+            text: 'Your appointment has been canceled.\n' + 'Patient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + appointment.date + '\nTime: ' + appointment.start_time + ' - ' + appointment.end_time
         };
         // Send the email
         transporter.sendMail(mailOptions, function (error, info) {
@@ -1241,21 +1244,19 @@ const unsubscribePackage = async (req, res) => {
 
 const selectAppointment = async (req, res) => {
     const { id } = req.params;
-    const { appointment_id, payment_type } = req.body;
+    const { appointment_id, payment_type, family_member } = req.body;
     try {
         const tempPatient = await patientModel.findById(id);
         var patient = await patientModel.findById(id);
         if (family_member) {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
-            console.log(index);
-            console.log(patient.family_members);
             patient = patient.family_members[index];
         }
         const appointment = await appointmentModel.findById(appointment_id);
         const doctor = await doctorModel.findById(appointment.doctor_id);
         if (payment_type === "wallet") {
             try {
-                const amount = doctor.hourly_rate * 1.1;
+                var amount = doctor.hourly_rate * 1.1;
                 if (family_member) {
                     const fam_package = await packageModel.findById(patient.health_package);
                     if (fam_package) {
@@ -1379,8 +1380,8 @@ const scheduleFollowUpDoctor = async (req, res) => {
                 pass: process.env.PASSWORD
             }
         });
-        const doctor = await doctorModel.findById(doctor_id);
-        const patient = await patientModel.findById(patient_id);
+        const doctor = await doctorModel.findById(appointment.doctor_id);
+        const patient = await patientModel.findById(appointment.patient_id);
         const doc_email = doctor.email;
         const patient_email = patient.email;
         // Set up the email options
@@ -1419,8 +1420,8 @@ const scheduleFollowUpPatient = async (req, res) => {
                 pass: process.env.PASSWORD
             }
         });
-        const doctor = await doctorModel.findById(doctor_id);
-        const patient = await patientModel.findById(patient_id);
+        const doctor = await doctorModel.findById(appointment.doctor_id);
+        const patient = await patientModel.findById(appointment.patient_id);
         const doc_email = doctor.email;
         const patient_email = patient.email;
         // Set up the email options
