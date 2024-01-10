@@ -4,6 +4,7 @@ const adminModel = require('../models/Admin.js');
 const medicineModel = require('../models/Medicine.js');
 const OTPModel = require('../models/OTP.js');
 const orderModel = require('../models/Order.js');
+const notificationModel = require('../models/Notification.js');
 const { default: mongoose } = require('mongoose');
 const nodemailer = require('nodemailer');
 const fetch = require('node-fetch');
