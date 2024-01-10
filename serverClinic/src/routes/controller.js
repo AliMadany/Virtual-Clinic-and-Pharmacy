@@ -989,6 +989,10 @@ const subscribePackage = async (req, res) => {
         if (payment_type === "wallet") {
             try {
                 const amount = package.price;
+                if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    amount = amount - fam_package.family_discount;
+                }
                 var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
@@ -1006,10 +1010,15 @@ const subscribePackage = async (req, res) => {
             }
         } else {
             try {
+                var price = package.price;
+                if (family_member && tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    price = price - fam_package.family_discount;
+                }
                 const items = [];
                 const item = {
                     name: "Health Package: " + package.name,
-                    price: package.price,
+                    price: price,
                     quantity: 1
                 };
 
@@ -1091,6 +1100,17 @@ const selectAppointment = async (req, res) => {
         if (payment_type === "wallet") {
             try {
                 const amount = doctor.hourly_rate * 1.1;
+                if (family_member) {
+                    const fam_package = await packageModel.findById(patient.health_package);
+                    if (fam_package) {
+                        amount = amount - fam_package.family_discount;
+                    }
+                } else if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    if (fam_package) {
+                        amount = amount - fam_package.family_discount;
+                    }
+                }
                 var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
@@ -1107,10 +1127,22 @@ const selectAppointment = async (req, res) => {
             }
         } else {
             try {
+                var price = doctor.hourly_rate * 1.1
+                if (family_member && patient.health_package) {
+                    const fam_package = await packageModel.findById(patient.health_package);
+                    if (fam_package) {
+                        price = price - fam_package.family_discount;
+                    }
+                } else if (tempPatient.health_package) {
+                    const fam_package = await packageModel.findById(tempPatient.health_package);
+                    if (fam_package) {
+                        price = price - fam_package.family_discount;
+                    }
+                }
                 const items = [];
                 const item = {
                     name: "Appointment with " + doctor.name + "- Date: " + appointment.date + " Time: " + appointment.start_time + " - " + appointment.end_time,
-                    price: doctor.hourly_rate * 1.1,
+                    price: price,
                     quantity: 1
                 };
 
