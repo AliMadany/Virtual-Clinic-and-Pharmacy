@@ -114,13 +114,33 @@ const patientSchema = new Schema({
                 ref: 'Package',
                 required: false,
                 default: null
-            }
+            },
+            renewal_date: {
+                type: String,
+                format: "date",
+                required: true
+            },
+            cancel_date: {
+                type: String,
+                format: "date",
+                required: false
+            },
         }],
         required: false
     },
     health_package: {
         type: Schema.Types.ObjectId,
         ref: 'Package',
+        required: false
+    },
+    renewal_date: {
+        type: String,
+        format: "date",
+        required: true
+    },
+    cancel_date: {
+        type: String,
+        format: "date",
         required: false
     },
     wallet: {

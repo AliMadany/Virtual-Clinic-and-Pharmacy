@@ -998,6 +998,7 @@ const subscribePackage = async (req, res) => {
                     wallet = wallet - amount;
                     tempPatient.wallet = wallet;
                     patient.health_package = package_id;
+                    patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
                     res.status(200).json("Package subscribed successfully!");
                 }
@@ -1037,6 +1038,7 @@ const subscribePackage = async (req, res) => {
                     return res.json().then(json => Promise.reject(json))
                 }).then(async ({ url }) => {
                     patient.health_package = package_id;
+                    patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
                     res.status(200).json({ url: url });
                 }).catch(e => {
@@ -1073,8 +1075,10 @@ const unsubscribePackage = async (req, res) => {
         if (family_member) {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
             family_members[index].health_package = null;
+            family_members[index].cancel_date = new Date().toISOString().split('T')[0];
         } else {
             patient.health_package = null;
+            patient.cancel_date = new Date().toISOString().split('T')[0];
         }
         await patient.save();
         res.status(200).json("Package unsubscribed successfully!");
