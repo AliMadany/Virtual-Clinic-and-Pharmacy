@@ -1078,17 +1078,23 @@ const selectAppointment = async (req, res) => {
     const { id } = req.params;
     const { appointment_id, payment_type } = req.body;
     try {
+        const tempPatient = await patientModel.findById(id);
+        var patient = await patientModel.findById(id);
+        if (family_member) {
+            const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+            console.log(index);
+            console.log(patient.family_members);
+            patient = patient.family_members[index];
+        }
         const appointment = await appointmentModel.findById(appointment_id);
+        const doctor = await doctorModel.findById(appointment.doctor_id);
         if (payment_type === "wallet") {
             try {
-                const patient = await patientModel.findById(id);
-                const doctor = await doctorModel.findById(appointment.doctor_id);
-
                 const amount = doctor.hourly_rate * 1.1;
-                var wallet = patient.wallet;
+                var wallet = tempPatient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
-                    patient.wallet = wallet;
+                    tempPatient.wallet = wallet;
                     await patient.save();
                     res.status(200).json("Appointment selected successfully!");
                 }
@@ -1101,8 +1107,6 @@ const selectAppointment = async (req, res) => {
             }
         } else {
             try {
-                const doctor = await doctorModel.findById(appointment.doctor_id);
-                //console.log(doctor);
                 const items = [];
                 const item = {
                     name: "Appointment with " + doctor.name + "- Date: " + appointment.date + " Time: " + appointment.start_time + " - " + appointment.end_time,
@@ -1111,7 +1115,6 @@ const selectAppointment = async (req, res) => {
                 };
 
                 items.push(item);
-                //console.log(items);
 
                 fetch('http://localhost:3100/create-checkout-session', {
                     method: 'POST',
