@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Form, FormControl, Button, Modal, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 
 function DoctorPrescriptions() {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -17,7 +20,26 @@ function DoctorPrescriptions() {
   const [medicineList, setMedicineList] = useState([{ name: '', dosage: '' }]);
   const [editingPrescription, setEditingPrescription] = useState(null);
 
+  const downloadPrescription = (prescription) => {
+    const doc = new jsPDF();
+    const tableColumn = ["Medicine Name", "Dosage"];
+    const tableRows = [];
 
+    prescription.medicines.forEach(med => {
+      const medData = [
+        med.name,
+        med.dosage,
+      ];
+      tableRows.push(medData);
+    });
+
+    doc.text(`Prescription Date: ${prescription.date}`, 14, 15);
+    doc.text(`Doctor: ${prescription.doctor_id.name}`, 14, 25);
+    doc.text(`Status: ${prescription.status}`, 14, 35);
+    doc.autoTable(tableColumn, tableRows, { startY: 45 });
+
+    doc.save(`prescription_${prescription._id}.pdf`);
+  };
 
 
   useEffect(() => {
@@ -219,6 +241,9 @@ function DoctorPrescriptions() {
                 <Button variant="primary" onClick={() => handleEditPrescription(prescription)}>Edit</Button>
                 <Button variant="danger" onClick={() => handleRemovePrescription(prescription._id)}>Delete</Button>
               </td>
+              <td>
+              <Button onClick={() => downloadPrescription(prescription)}>Download</Button>
+            </td>
             </tr>
           ))}
         </tbody>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Form, FormControl } from 'react-bootstrap';
+import { Table, Form, FormControl, Button } from 'react-bootstrap';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 function PatientPrescriptions() {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -9,6 +11,27 @@ function PatientPrescriptions() {
   const [searchDoctor, setSearchDoctor] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
+
+  const downloadPrescription = (prescription) => {
+    const doc = new jsPDF();
+    const tableColumn = ["Medicine Name", "Dosage"];
+    const tableRows = [];
+
+    prescription.medicines.forEach(med => {
+      const medData = [
+        med.name,
+        med.dosage,
+      ];
+      tableRows.push(medData);
+    });
+
+    doc.text(`Prescription Date: ${prescription.date}`, 14, 15);
+    doc.text(`Doctor: ${prescription.doctor_id.name}`, 14, 25);
+    doc.text(`Status: ${prescription.status}`, 14, 35);
+    doc.autoTable(tableColumn, tableRows, { startY: 45 });
+
+    doc.save(`prescription_${prescription._id}.pdf`);
+  };
   useEffect(() => {
     axios.get('http://localhost:3100/getPrescriptionsByPatient/' + localStorage.getItem('userId'))
       .then(response => {
@@ -56,6 +79,23 @@ function PatientPrescriptions() {
     setFilteredPrescriptions(filtered);
   };
 
+  const handlePayment = ( paymentType) => {
+    axios.put(`http://localhost:3100/subscribePrescription/${localStorage.getItem('userId')}`, {
+      payable: 250,
+      payment_type: paymentType
+    })
+      .then(response => {
+        if (paymentType === "card") {
+          window.location.href = response.data.url; // Redirect to payment URL for card payments
+        } else {
+          alert("Paid with Wallet");
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("Error processing payment");
+      });
+  };
 
   return (
     <div>
@@ -98,6 +138,14 @@ function PatientPrescriptions() {
 
               }</td>
               <td>{prescription.status === 'filled' ? 'Yes' : 'No'}</td>
+              <td>
+                <Button onClick={() => downloadPrescription(prescription)}>Download</Button>
+              </td>
+              <td>
+                <Button variant="success" onClick={() => handlePayment('wallet')}>Pay with Wallet</Button>{' '}
+                <Button variant="primary" onClick={() => handlePayment("card")}>Pay with Card</Button>
+
+              </td>
             </tr>
           ))}
         </tbody>
