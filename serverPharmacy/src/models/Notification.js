@@ -9,12 +9,12 @@ const notificationSchema = new Schema({
     },
     date: {
         type: String,
-        format: Date,
+        format: "date",
         required: true
     },
     time: {
         type: String, 
-        format: Time,
+        format: "time",
         required: true
     }
 });
