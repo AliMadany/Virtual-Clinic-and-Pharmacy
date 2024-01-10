@@ -112,7 +112,8 @@ const patientSchema = new Schema({
             health_package: {
                 type: Schema.Types.ObjectId,
                 ref: 'Package',
-                required: false
+                required: false,
+                default: null
             }
         }],
         required: false

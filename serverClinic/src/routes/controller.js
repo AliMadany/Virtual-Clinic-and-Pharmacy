@@ -974,18 +974,24 @@ const getPackage = async (req, res) => {
 
 const subscribePackage = async (req, res) => {
     const { id } = req.params;
-    const { package_id, payment_type } = req.body;
+    const { package_id, payment_type, family_member } = req.body;
     try {
-        patient = await patientModel.findById(id);
+        const tempPatient = await patientModel.findById(id);
+        var patient = await patientModel.findById(id);
+        if (family_member) {
+            const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+            console.log(index);
+            console.log(patient.family_members);
+            patient = patient.family_members[index];
+        }
+        const package = await packageModel.findById(package_id);
         if (payment_type === "wallet") {
             try {
-                const patient = await patientModel.findById(id);
-                const package = await packageModel.findById(package_id);
                 const amount = package.price;
                 var wallet = patient.wallet;
                 if (wallet >= amount) {
                     wallet = wallet - amount;
-                    patient.wallet = wallet;
+                    tempPatient.wallet = wallet;
                     patient.health_package = package_id;
                     await patient.save();
                     res.status(200).json("Package subscribed successfully!");
@@ -999,9 +1005,6 @@ const subscribePackage = async (req, res) => {
             }
         } else {
             try {
-                const patient = await patientModel.findById(id);
-                const package = await packageModel.findById(package_id);
-
                 const items = [];
                 const item = {
                     name: "Health Package: " + package.name,
