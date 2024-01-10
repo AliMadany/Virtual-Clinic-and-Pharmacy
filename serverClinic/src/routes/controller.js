@@ -567,12 +567,15 @@ const addAppointment = async (req, res) => {
                 }
             });
             const doctor = await doctorModel.findById(doctor_id);
+            const patient = await patientModel.findById(patient_id);
+            const doc_email = doctor.email;
+            const patient_email = patient.email;
             // Set up the email options
             const mailOptions = {
                 from: process.env.EMAIL,
-                to: email,
+                to: patient_email, doc_email,
                 subject: 'Clinic Appointment',
-                text: 'You have an appointment on ' + date + ' at ' + start_time + ' with ' + doctor.name + '.'
+                text: 'You have a new appointment.\n' + 'Patient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + date + '\nTime: ' + start_time + ' - ' + end_time
             };
             // Send the email
             transporter.sendMail(mailOptions, function (error, info) {
@@ -608,12 +611,15 @@ const editAppointment = async (req, res) => {
             }
         });
         const doctor = await doctorModel.findById(doctor_id);
+        const patient = await patientModel.findById(patient_id);
+        const doc_email = doctor.email;
+        const patient_email = patient.email;
         // Set up the email options
         const mailOptions = {
             from: process.env.EMAIL,
-            to: email,
+            to: patient_email, doc_email,
             subject: 'Clinic Appointment',
-            text: 'There is an update on your appointment on ' + date + ' at ' + start_time + ' with ' + doctor.name + '.'
+            text: 'Your appointment has been updated.\n' + 'Patient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + date + '\nTime: ' + start_time + ' - ' + end_time
         };
         // Send the email
         transporter.sendMail(mailOptions, function (error, info) {
@@ -648,12 +654,15 @@ const removeAppointment = async (req, res) => {
             }
         });
         const doctor = await doctorModel.findById(doctor_id);
+        const patient = await patientModel.findById(patient_id);
+        const doc_email = doctor.email;
+        const patient_email = patient.email;
         // Set up the email options
         const mailOptions = {
             from: process.env.EMAIL,
-            to: email,
+            to: patient_email, doc_email,
             subject: 'Clinic Appointment',
-            text: 'Your appointment on ' + date + ' at ' + start_time + ' with ' + doctor.name + ' has been cancelled.'
+            text: 'Your appointment has been canceled.\n' + 'Patient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + date + '\nTime: ' + start_time + ' - ' + end_time
         };
         // Send the email
         transporter.sendMail(mailOptions, function (error, info) {
@@ -1258,6 +1267,31 @@ const selectAppointment = async (req, res) => {
         }
         appointment.paid = true;
         await appointment.save();
+        // Create a transporter using your email service details
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+        const doc_email = doctor.email;
+        const patient_email = patient.email;
+        // Set up the email options
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: doc_email, patient_email,
+            subject: 'Clinic Appointment',
+            text: 'Your appointment has been updated.\n' + 'Patient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + appointment.date + '\nTime: ' + appointment.start_time + ' - ' + appointment.end_time + '\nStatus: ' + appointment.status
+        };
+        // Send the email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
     } catch (error) {
         res.status(400).json({ err: error.message });
     }
@@ -1270,6 +1304,33 @@ const scheduleFollowUpDoctor = async (req, res) => {
         appointment.status = "confirmed";
         appointment.patient_id = patient_id;
         await appointment.save();
+        // Create a transporter using your email service details
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+        const doctor = await doctorModel.findById(doctor_id);
+        const patient = await patientModel.findById(patient_id);
+        const doc_email = doctor.email;
+        const patient_email = patient.email;
+        // Set up the email options
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: patient_email, doc_email,
+            subject: 'Clinic Appointment',
+            text: 'You have a followup appointment.\nPatient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + appointment.date + '\nTime: ' + appointment.start_time + ' - ' + appointment.end_time
+        };
+        // Send the email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
         res.status(200).json("Follow up scheduled successfully!");
     } catch (error) {
         res.status(400).json({ err: error.message });
@@ -1283,6 +1344,33 @@ const scheduleFollowUpPatient = async (req, res) => {
         appointment.status = "pending";
         appointment.patient_id = patient_id;
         await appointment.save();
+        // Create a transporter using your email service details
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+        const doctor = await doctorModel.findById(doctor_id);
+        const patient = await patientModel.findById(patient_id);
+        const doc_email = doctor.email;
+        const patient_email = patient.email;
+        // Set up the email options
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: patient_email, doc_email,
+            subject: 'Clinic Appointment',
+            text: 'You have a pending followup appointment.\nPatient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + appointment.date + '\nTime: ' + appointment.start_time + ' - ' + appointment.end_time
+        };
+        // Send the email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
         res.status(200).json("Follow up scheduled successfully!");
     } catch (error) {
         res.status(400).json({ err: error.message });
@@ -1309,6 +1397,33 @@ const acceptFollowUp = async (req, res) => {
         } else {
             appointment.status = "accepted";
             await appointment.save();
+            // Create a transporter using your email service details
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL,
+                    pass: process.env.PASSWORD
+                }
+            });
+            const doctor = await doctorModel.findById(doctor_id);
+            const patient = await patientModel.findById(patient_id);
+            const doc_email = doctor.email;
+            const patient_email = patient.email;
+            // Set up the email options
+            const mailOptions = {
+                from: process.env.EMAIL,
+                to: patient_email, doc_email,
+                subject: 'Clinic Appointment',
+                text: 'Appointment status has been changed.\nPatient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + appointment.date + '\nTime: ' + appointment.start_time + ' - ' + appointment.end_time + '\nStatus: ' + appointment.status
+            };
+            // Send the email
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.error(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                }
+            });
             res.status(200).json("Follow up accepted successfully!");
         }
     }
@@ -1326,6 +1441,33 @@ const revokeFollowUp = async (req, res) => {
         } else {
             appointment.status = "revoked";
             await appointment.save();
+            // Create a transporter using your email service details
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL,
+                    pass: process.env.PASSWORD
+                }
+            });
+            const doctor = await doctorModel.findById(doctor_id);
+            const patient = await patientModel.findById(patient_id);
+            const doc_email = doctor.email;
+            const patient_email = patient.email;
+            // Set up the email options
+            const mailOptions = {
+                from: process.env.EMAIL,
+                to: patient_email, doc_email,
+                subject: 'Clinic Appointment',
+                text: 'Appointment status has been changed.\nPatient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + appointment.date + '\nTime: ' + appointment.start_time + ' - ' + appointment.end_time + '\nStatus: ' + appointment.status
+            };
+            // Send the email
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.error(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                }
+            });
             res.status(200).json("Follow up revoked successfully!");
         }
     }
@@ -1389,6 +1531,33 @@ const cancelAppointment = async (req, res) => {
                 res.status(200).json({ message: "Appointment canceled successfully" });
             }
         }
+        // Create a transporter using your email service details
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+        const doctor = await doctorModel.findById(doctor_id);
+        const patient = await patientModel.findById(patient_id);
+        const doc_email = doctor.email;
+        const patient_email = patient.email;
+        // Set up the email options
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: patient_email, doc_email,
+            subject: 'Clinic Appointment',
+            text: 'Appointment status has been changed.\nPatient: ' + patient.name + '\nDoctor: ' + doctor.name + '\nDate: ' + appointment.date + '\nTime: ' + appointment.start_time + ' - ' + appointment.end_time + '\nStatus: ' + appointment.status
+        };
+        // Send the email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
     }
     catch (error) {
         res.status(409).json({ message: error.message });
