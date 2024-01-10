@@ -49,7 +49,8 @@ function PatientPackages() {
 
   const handleConfirmSubscription = () => {
     setShowSubscribeModal(false);
-    setShowModal(true);
+    setShowModal(false);
+    setShowPaymentModal(true);
   };
 
 
@@ -64,14 +65,18 @@ function PatientPackages() {
     const packageId = selectedPackage._id;
 
 
+    let family_member = null;
     if (selectedMember) {
-      patientId = selectedMember._id;
+      family_member = selectedMember.nationalId;
+
     }
+
 
 
     axios.put(`http://localhost:3100/subscribePackage/${patientId}/`, {
       package_id: packageId,
-      payment_type: method
+      payment_type: method,
+      family_member: family_member
     })
       .then(response => {
         if (method === 'Credit Card') {
