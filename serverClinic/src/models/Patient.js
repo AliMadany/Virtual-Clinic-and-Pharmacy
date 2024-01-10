@@ -118,7 +118,7 @@ const patientSchema = new Schema({
             renewal_date: {
                 type: String,
                 format: "date",
-                required: true
+                required: false
             },
             cancel_date: {
                 type: String,
@@ -136,7 +136,7 @@ const patientSchema = new Schema({
     renewal_date: {
         type: String,
         format: "date",
-        required: true
+        required: false
     },
     cancel_date: {
         type: String,

@@ -1049,7 +1049,7 @@ const subscribePackage = async (req, res) => {
     const { id } = req.params;
     const { package_id, payment_type, family_member } = req.body;
     try {
-        const tempPatient = await patientModel.findById(id);
+        var tempPatient = await patientModel.findById(id);
         var patient = await patientModel.findById(id);
         if (family_member) {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
@@ -1060,7 +1060,7 @@ const subscribePackage = async (req, res) => {
         const package = await packageModel.findById(package_id);
         if (payment_type === "wallet") {
             try {
-                const amount = package.price;
+                var amount = package.price;
                 if (tempPatient.health_package) {
                     const fam_package = await packageModel.findById(tempPatient.health_package);
                     amount = amount - fam_package.family_discount;
@@ -1072,6 +1072,7 @@ const subscribePackage = async (req, res) => {
                     patient.health_package = package_id;
                     patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
+                    await patient.save();
                     res.status(200).json("Package subscribed successfully!");
                 }
                 else {
@@ -1112,6 +1113,7 @@ const subscribePackage = async (req, res) => {
                     patient.health_package = package_id;
                     patient.renewal_date = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
                     await tempPatient.save();
+                    await patient.save();
                     res.status(200).json({ url: url });
                 }).catch(e => {
                     console.error(e)
