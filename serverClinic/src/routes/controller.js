@@ -7,7 +7,25 @@ const packageModel = require('../models/Package.js');
 const healthRecordsModel = require('../models/HealthRecords.js');
 const notificationModel = require('../models/Notification.js');
 const { default: mongoose, Mongoose } = require('mongoose');
+const OTPModel = require('../models/OTP.js');
 const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
+
+const acceptContract = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const doctor = await doctorModel.findById(id);
+        if (!doctor) {
+            return res.status(404).json({ message: "Doctor not found" });
+        }
+        doctor.acceptedContract = true;
+        await doctor.save();
+        res.status(200).json({ message: "Contract accepted successfully" });
+    }
+    catch (error) {
+        res.status(409).json({ message: error.message });
+    }
+}
 
 const addPatient = async (req, res) => {
     const { name, email, username, password, date_of_birth, gender, mobile_number } = req.body;
@@ -37,7 +55,11 @@ const addDoctor = async (req, res) => {
         if (user) {
             res.status(400).json("Doctor already exists!");
         } else {
-            const user = await doctorModel.create({ name, email, username, password, date_of_birth, hourly_rate, affiliation, education, specialty, doctor_id, medical_license, medical_degree });
+            const doctorIdBuffer = Buffer.from(doctor_id, 'binary');
+            const doctorLiceseBuffer = Buffer.from(medical_license, 'binary');
+            const doctorDegreeBuffer = Buffer.from(medical_degree, 'binary');
+
+            const user = await doctorModel.create({ name, email, username, password, date_of_birth, hourly_rate, affiliation, education, specialty, doctor_id: doctorIdBuffer, medical_license: doctorLiceseBuffer, medical_degree: doctorDegreeBuffer });
             await user.save();
             res.status(200).json("Doctor created successfully!");
         }
@@ -217,7 +239,8 @@ const addFamilyMember = async (req, res) => {
 const getFamilyMembers = async (req, res) => {
     const { id } = req.params;
     try {
-        const patient = await patientModel.findById(id);
+        //populate family members health package
+        const patient = await patientModel.findById(id).populate('family_members.health_package');
         if (!patient) {
             return res.status(404).json({ message: "Patient not found" });
         }
@@ -262,11 +285,22 @@ const getAppointmentsByPatient = async (req, res) => {
 
 }
 
+const getAppointments = async (req, res) => {
+    try {
+        const appointments = await appointmentModel.find({ }).populate('doctor_id');
+        res.status(200).json(appointments);
+    }
+    catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+
+}
+
 
 const getPatientById = async (req, res) => {
     const { id } = req.params;
     try {
-        const patient = await patientModel.findById(id);
+        const patient = await patientModel.findById(id).populate('health_package');
         res.status(200).json(patient);
     }
     catch (error) {
@@ -301,7 +335,7 @@ const getPatientsByAppointments = async (req, res) => {
         const appointments = await appointmentModel.find();
         const patientsByAppointments = [];
         for (let i = 0; i < appointments.length; i++) {
-            if (appointments[i].doctor_id == id) {
+            if (appointments[i].doctor_id == id && appointments[i].patient_id != null) {
                 const patient = await patientModel.findById(appointments[i].patient_id);
                 patientsByAppointments.push(patient);
             }
@@ -520,7 +554,7 @@ const addAppointment = async (req, res) => {
         if (appointment) {
             res.status(400).json("Appointment already exists!");
         } else {
-            const appointment = await appointmentModel.create({ patient_id, doctor_id, date, start_time, end_time });
+            const appointment = await appointmentModel.create({ patient_id, doctor_id, date, start_time, end_time, status: req.body.status? req.body.status : "free" });
             await appointment.save();
             const notification = await notificationModel.create({ appointment_id: appointment._id, status: "created" });
             await notification.save();
@@ -626,7 +660,7 @@ const removeAdmin = async (req, res) => {
     }
 }
 
-const getPackageForPatient = async (req, res)=>{
+const getPackageForPatient = async (req, res) => {
     const { id } = req.params;
     try {
         const user = await patientModel.findById(id);
@@ -643,68 +677,68 @@ const getPackageForPatient = async (req, res)=>{
 }
 
 const acceptDoctor = async (req, res) => {
-    const {id} = req.params;
-    try{
+    const { id } = req.params;
+    try {
         const doctor = await doctorModel.findById(id);
-        if(!doctor){
-        return res.status(404).json({message: "Doctor not found"});
+        if (!doctor) {
+            return res.status(404).json({ message: "Doctor not found" });
         }
         doctor.status = "approved";
         await doctor.save();
-        res.status(200).json({message: "Doctor accepted successfully"});
+        res.status(200).json({ message: "Doctor accepted successfully" });
     }
-    catch(error){
-       res.status(409).json({message: error.message});
+    catch (error) {
+        res.status(409).json({ message: error.message });
     }
 }
 
 const rejectDoctor = async (req, res) => {
-    const {id} = req.params;
-    try{
+    const { id } = req.params;
+    try {
         const doctor = await doctorModel.findById(id);
-        if(!doctor){
-        return res.status(404).json({message: "Doctor not found"});
+        if (!doctor) {
+            return res.status(404).json({ message: "Doctor not found" });
         }
         doctor.status = "rejected";
         await doctor.save();
-        res.status(200).json({message: "Doctor rejected successfully"});
+        res.status(200).json({ message: "Doctor rejected successfully" });
     }
-    catch(error){
-       res.status(409).json({message: error.message});
+    catch (error) {
+        res.status(409).json({ message: error.message });
     }
 }
 
 const getUserId = async (username, userType) => {
-    try{
+    try {
         if (userType === "patient") {
-            const patient = await patientModel.findOne({username: username});
+            const patient = await patientModel.findOne({ username: username });
             return patient._id;
         } else if (userType === "doctor") {
-            const doctor = await doctorModel.findOne({username: username});
+            const doctor = await doctorModel.findOne({ username: username });
             return doctor._id;
         } else if (userType === "admin") {
-            const admin = await adminModel.findOne({username: username});
+            const admin = await adminModel.findOne({ username: username });
             return admin._id;
         } else {
             return null;
         }
     }
-    catch(error){
-        res.status(404).json({message: error.message});
+    catch (error) {
+        res.status(404).json({ message: error.message });
     }
 }
 
 const getUserType = async (username) => {
-    try{
-        const patient = await patientModel.findOne({username: username});
+    try {
+        const patient = await patientModel.findOne({ username: username });
         if (patient) {
             return "patient";
         } else {
-            const doctor = await doctorModel.findOne({username: username});
+            const doctor = await doctorModel.findOne({ username: username });
             if (doctor) {
                 return "doctor";
             } else {
-                const admin = await adminModel.findOne({username: username});
+                const admin = await adminModel.findOne({ username: username });
                 if (admin) {
                     return "admin";
                 } else {
@@ -713,16 +747,16 @@ const getUserType = async (username) => {
             }
         }
     }
-    catch(error){
+    catch (error) {
         return null;
     }
 }
 
 const login = async (username, password) => {
-    try{
-        const patient = await patientModel.findOne({username: username});
-        const doctor = await doctorModel.findOne({username: username});
-        const admin = await adminModel.findOne({username: username});
+    try {
+        const patient = await patientModel.findOne({ username: username });
+        const doctor = await doctorModel.findOne({ username: username });
+        const admin = await adminModel.findOne({ username: username });
         if (patient) {
             if (patient.password === password) {
                 return true;
@@ -747,81 +781,81 @@ const login = async (username, password) => {
             return false;
         }
     }
-    catch(error){
-        res.status(404).json({message: error.message});
+    catch (error) {
+        res.status(404).json({ message: error.message });
     }
 }
 
 const changePassword = async (req, res) => {
-    const {username, password} = req.body;
-    try{
-        const doctor = await doctorModel.findOne({username: username});
-        if(doctor){
+    const { username, password } = req.body;
+    try {
+        const doctor = await doctorModel.findOne({ username: username });
+        if (doctor) {
             doctor.password = password;
             await doctor.save();
             res.status(200).json("Password changed successfully");
         }
-        else{
-            const patient = await patientModel.findOne({username: username});
-            if(patient){
+        else {
+            const patient = await patientModel.findOne({ username: username });
+            if (patient) {
                 patient.password = password;
                 await patient.save();
                 res.status(200).json("Password changed successfully");
             }
-            else{
-                const admin = await adminModel.findOne({username: username});
-                if(admin){
+            else {
+                const admin = await adminModel.findOne({ username: username });
+                if (admin) {
                     admin.password = password;
                     await admin.save();
                     res.status(200).json("Password changed successfully");
                 }
-                else{
+                else {
                     res.status(400).json("User not found");
                 }
             }
         }
     }
-    catch(error){
-        res.status(404).json({message: error.message});
+    catch (error) {
+        res.status(404).json({ message: error.message });
     }
 }
 
 const checkOTP = async (req, res) => {
-    const {username} = req.params;
-    const {otp} = req.body;
-    try{
-        const tempOTP = await OTPModel.findOne({username: username});
-        if(tempOTP){
-            if(tempOTP.otp === otp){
-                res.status(200).json({"flag": true});
+    const { username } = req.params;
+    const { otp } = req.body;
+    try {
+        const tempOTP = await OTPModel.findOne({ username: username });
+        if (tempOTP) {
+            if (tempOTP.otp === otp) {
+                res.status(200).json({ "flag": true });
             }
-            else{
-                res.status(200).json({"flag": false});
+            else {
+                res.status(200).json({ "flag": false });
             }
         }
-        else{
+        else {
             res.status(400).json("OTP not found");
         }
     }
-    catch(error){
-        res.status(404).json({message: error.message});
+    catch (error) {
+        res.status(404).json({ message: error.message });
     }
 }
 
 const resetPasswordEmail = async (email, username) => {
     const OTP = Math.floor(100000 + Math.random() * 900000).toString();
-    const tempOTP = await OTPModel.findOne({username: username});
+    const tempOTP = await OTPModel.findOne({ username: username });
     if (tempOTP) {
         tempOTP.otp = OTP;
         await tempOTP.save();
     } else {
-        await OTPModel.create({username: username, otp: OTP});
+        await OTPModel.create({ username: username, otp: OTP });
     };
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD
+            user: process.env.EMAIL,
+            pass: process.env.PASSWORD
         }
     });
     const mailOptions = {
@@ -830,97 +864,104 @@ const resetPasswordEmail = async (email, username) => {
         subject: 'Password Reset',
         text: 'To reset your password enter the following OTP: ' + OTP
     };
-    transporter.sendMail(mailOptions, function(error, info){
+    transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-        console.error(error);
+            console.error(error);
         } else {
-        console.log('Email sent: ' + info.response);
+            console.log('Email sent: ' + info.response);
         }
     });
 }
 
 const resetPassword = async (req, res) => {
-    const {username} = req.body;
-    try{
-        const doctor = await doctorModel.findOne({username: username});
-        if(doctor){
+    const { username } = req.body;
+    try {
+        const doctor = await doctorModel.findOne({ username: username });
+        if (doctor) {
             resetPasswordEmail(doctor.email, doctor.username);
             res.status(200).json("Email sent successfully");
         }
-        else{
-            const patient = await patientModel.findOne({username: username});
-            if(patient){
+        else {
+            const patient = await patientModel.findOne({ username: username });
+            if (patient) {
                 resetPasswordEmail(patient.email, patient.username);
                 res.status(200).json("Email sent successfully");
             }
-            else{
-                const admin = await adminModel.findOne({username: username});
-                if(admin){
+            else {
+                const admin = await adminModel.findOne({ username: username });
+                if (admin) {
                     resetPasswordEmail(admin.email, admin.username);
                     res.status(200).json("Email sent successfully");
                 }
-                else{
+                else {
                     res.status(400).json("User not found");
                 }
             }
         }
     }
-    catch(error){
-        res.status(404).json({message: error.message});
+    catch (error) {
+        res.status(404).json({ message: error.message });
     }
 }
 
 const uploadHealthRecord = async (req, res) => {
-    try{
+    try {
         const { id } = req.params;
-        const { filename, filetype, filesize, filedata } = req.body;
+        const { name, file } = req.body;
 
-        const file = {
-            filename: filename,
-            filetype: filetype,
-            filesize: filesize,
-            filedata: filedata
-        }
+        const fileBuffer = Buffer.from(file, 'binary');
 
         const patient = await patientModel.findById(id);
-        if(!patient){
-            res.status(404).json({message: "Patient not found"});
-        } else {
-            const healthRecord = await healthRecordsModel.find({patient_id: id});
-            if (healthRecord) {
-                healthRecord.files.push(file);
-                await healthRecord.save();
-                res.status(200).json("Health record uploaded successfully!");
-            } else {
-                const healthRecord = await healthRecordsModel.create({ patient_id: id });
-                healthRecord.files.push(file);
-                await healthRecord.save();
-                res.status(200).json("Health record uploaded successfully!");
-            }
+        if (!patient) {
+            return res.status(404).json({ message: "Patient not found" });
         }
-        
+
+        patient.health_records.push({ name, file: fileBuffer });
+        await patient.save();
+
+        res.status(200).json({ message: "Health record uploaded successfully" });
     } catch (error) {
         console.error('Error uploading documents:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
+
 const getHealthRecords = async (req, res) => {
     try {
         const { id } = req.params;
-        
-        const healthRecord = await healthRecordModels.find({patient_id: id});
-        if (healthRecord) {
-            res.status(200).json(healthRecord);
-        } else {
-            res.status(404).json({message: "Health record not found"});
+
+        const patient = await patientModel.findById(id).select('health_records');
+        if (!patient) {
+            return res.status(404).json({ message: "Patient not found" });
         }
 
+        res.status(200).json(patient.health_records);
     } catch (error) {
-        console.error('Error fetching health records:', error);
+        console.error('Error getting health records:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+const removeHealthRecord = async (req, res) => {
+    try {
+        const { patientId, recordName } = req.params;
+
+        const patient = await patientModel.findById(patientId);
+        if (!patient) {
+            return res.status(404).json({ message: "Patient not found" });
+        }
+
+        patient.health_records = patient.health_records.filter(record => record.name !== recordName);
+        await patient.save();
+
+        res.status(200).json({ message: "Health record removed successfully" });
+    } catch (error) {
+        console.error('Error removing health record:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 
 const getPackage = async (req, res) => {
     const { id } = req.params;
@@ -934,44 +975,48 @@ const getPackage = async (req, res) => {
 
 const subscribePackage = async (req, res) => {
     const { id } = req.params;
-    const { package_id, payment_type } = req.body;
+    const { package_id, payment_type, family_member } = req.body;
     try {
-        patient = await patientModel.findById(id);
-        if (payment_type === "wallet" ){
-            try{
-                const patient = await patientModel.findById(id);
-                const package = await packageModel.findById(package_id);
+        const tempPatient = await patientModel.findById(id);
+        var patient = await patientModel.findById(id);
+        if (family_member) {
+            const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+            console.log(index);
+            console.log(patient.family_members);
+            patient = tempPatient.family_members[index];
+
+        }
+        const package = await packageModel.findById(package_id);
+        if (payment_type === "wallet") {
+            try {
                 const amount = package.price;
-                var wallet = patient.wallet;
-                if(wallet >= amount){
+                var wallet = tempPatient.wallet;
+                if (wallet >= amount) {
                     wallet = wallet - amount;
-                    patient.wallet = wallet;
+                    tempPatient.wallet = wallet;
                     patient.health_package = package_id;
-                    await patient.save();
+                    await tempPatient.save();
                     res.status(200).json("Package subscribed successfully!");
                 }
-                else{
+                else {
                     res.status(400).json("Insufficient balance!");
                 }
             }
-            catch(error){
+            catch (error) {
                 res.status(400).json({ err: error.message });
             }
         } else {
-            try{
-                const patient = await patientModel.findById(id);
-                const package = await packageModel.findById(package_id);
-        
+            try {
                 const items = [];
                 const item = {
                     name: "Health Package: " + package.name,
                     price: package.price,
                     quantity: 1
                 };
-        
+
                 items.push(item);
-        
-                fetch('http://localhost:3000/create-checkout-session', {
+
+                fetch('http://localhost:3100/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -984,14 +1029,14 @@ const subscribePackage = async (req, res) => {
                     return res.json().then(json => Promise.reject(json))
                 }).then(async ({ url }) => {
                     patient.health_package = package_id;
-                    await patient.save();
-                    res.status(200).json({url: url});
+                    await tempPatient.save();
+                    res.status(200).json({ url: url });
                 }).catch(e => {
                     console.error(e)
                 });
             }
-            catch(error){
-               res.status(400).json({ err: error.message });
+            catch (error) {
+                res.status(400).json({ err: error.message });
             }
         }
         patient.health_package = package_id;
@@ -1000,7 +1045,7 @@ const subscribePackage = async (req, res) => {
         res.status(400).json({ err: error.message });
     }
 }
-        
+
 const getCurrentPackage = async (req, res) => {
     const { id } = req.params;
     try {
@@ -1014,9 +1059,15 @@ const getCurrentPackage = async (req, res) => {
 
 const unsubscribePackage = async (req, res) => {
     const { id } = req.params;
+    const { family_member } = req.body;
     try {
-        patient = await patientModel.findById(id);
-        patient.health_package = null;
+        var patient = await patientModel.findById(id);
+        if (family_member) {
+            const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+            family_members[index].health_package = null;
+        } else {
+            patient.health_package = null;
+        }
         await patient.save();
         res.status(200).json("Package unsubscribed successfully!");
     } catch (error) {
@@ -1028,42 +1079,45 @@ const selectAppointment = async (req, res) => {
     const { id } = req.params;
     const { appointment_id, payment_type } = req.body;
     try {
+        const tempPatient = await patientModel.findById(id);
+        var patient = await patientModel.findById(id);
+        if (family_member) {
+            const index = patient.family_members.findIndex(member => member.nationalId === family_member);
+            console.log(index);
+            console.log(patient.family_members);
+            patient = patient.family_members[index];
+        }
         const appointment = await appointmentModel.findById(appointment_id);
-        if (payment_type === "wallet" ){
-            try{
-                const patient = await patientModel.findById(id);
-                const doctor = await doctorModel.findById(appointment.doctor_id);
-
-                const amount = doctor.hourly_rate*1.1;
-                var wallet = patient.wallet;
-                if(wallet >= amount){
+        const doctor = await doctorModel.findById(appointment.doctor_id);
+        if (payment_type === "wallet") {
+            try {
+                const amount = doctor.hourly_rate * 1.1;
+                var wallet = tempPatient.wallet;
+                if (wallet >= amount) {
                     wallet = wallet - amount;
-                    patient.wallet = wallet;
+                    tempPatient.wallet = wallet;
                     await patient.save();
                     res.status(200).json("Appointment selected successfully!");
                 }
-                else{
+                else {
                     res.status(400).json("Insufficient balance!");
                 }
             }
-            catch(error){
+            catch (error) {
                 res.status(400).json({ err: error.message });
             }
         } else {
-            try{
-                const doctor = await doctorModel.findById(appointment.doctor_id);
-                console.log(doctor);
+            try {
                 const items = [];
                 const item = {
                     name: "Appointment with " + doctor.name + "- Date: " + appointment.date + " Time: " + appointment.start_time + " - " + appointment.end_time,
-                    price: doctor.hourly_rate*1.1,
+                    price: doctor.hourly_rate * 1.1,
                     quantity: 1
                 };
-        
+
                 items.push(item);
-                console.log(items);
-        
-                fetch('http://localhost:3000/create-checkout-session', {
+
+                fetch('http://localhost:3100/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1075,13 +1129,14 @@ const selectAppointment = async (req, res) => {
                     if (res.ok) return res.json()
                     return res.json().then(json => Promise.reject(json))
                 }).then(async ({ url }) => {
-                    res.status(200).json({url: url});
+                    res.status(200).json({ url: url });
                 }).catch(e => {
                     console.error(e)
+                    res.status(400).json({ err: error.message });
                 });
             }
-            catch(error){
-               res.status(400).json({ err: error.message });
+            catch (error) {
+                res.status(400).json({ err: error.message });
             }
         }
         if (appointment.patient_id === null) {
@@ -1171,8 +1226,15 @@ const revokeFollowUp = async (req, res) => {
 const checkWallet = async (req, res) => {
     const { id } = req.params;
     try {
-        const patient = await patientModel.findById(id);
-        wallet = patient.wallet;
+        let user = await patientModel.findById(id);
+        if(!user) {
+            user = await doctorModel.findById(id);
+        }
+        if(!user) {
+            user = await adminModel.findById(id);
+        }
+        
+        wallet = user.wallet;
         res.status(200).json(wallet);
     } catch (error) {
         res.status(400).json({ err: error.message });
@@ -1197,7 +1259,7 @@ const cancelAppointment = async (req, res) => {
                     // refund
                     const patient = await patientModel.findById(appointment.patient_id);
                     const doctor = await doctorModel.findById(appointment.doctor_id);
-                    const amount = doctor.hourly_rate*1.1;
+                    const amount = doctor.hourly_rate * 1.1;
                     var wallet = patient.wallet;
                     wallet = wallet + amount;
                     patient.wallet = wallet;
@@ -1208,7 +1270,7 @@ const cancelAppointment = async (req, res) => {
                 // refund
                 const patient = await patientModel.findById(appointment.patient_id);
                 const doctor = await doctorModel.findById(appointment.doctor_id);
-                const amount = doctor.hourly_rate*1.1;
+                const amount = doctor.hourly_rate * 1.1;
                 var wallet = patient.wallet;
                 wallet = wallet + amount;
                 patient.wallet = wallet;
@@ -1292,4 +1354,19 @@ const getChats = async (req, res) => {
     }
 }
 
-module.exports = { addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats };
+const checkPatientDoctorChat = async (req, res) => {
+    const { id, doctor_id } = req.params;
+    try {
+        const appointments = await appointmentModel.find({ patient_id: id, doctor_id: doctor_id });
+        if (appointments.length > 0) {
+            res.status(200).json(true);
+        } else {
+            res.status(200).json(false);
+        }
+    }
+    catch (error) {
+        res.status(409).json({ message: error.message });
+    }
+}
+
+module.exports = { getAppointments, acceptContract, addPatient, addDoctor, addAdmin, removeDoctor, removePatient, getPendingDoctors, addPackage, editPackage, removePackage, editDoctorDetails, addFamilyMember, getFamilyMembers, getAppointmentsByDate, getAppointmentsByStatus, getPatientById, getAllPatients, getPatientByName, getPatientsByAppointments, getDoctors, getDoctorByName, getDoctorBySpecialty, getDoctorByDateTime, getDoctorBySpecialtyAndDateTime, getDoctorByDate, getDoctorBySpecialtyAndDate, getDoctorById, getPrescriptionsByPatient, getPrescriptionsByDate, getPrescriptionsByDoctor, getPrescriptionByStatus, getPrescription, addAppointment, editAppointment, removeAppointment, addPrescription, editPrescription, removePrescription, getAdmins, removeAdmin, getPackages, getAppointmentsByPatient, getAppointmentsByDoctor, getPatientsByUpcomingAppointments, getPackageForPatient, acceptDoctor, rejectDoctor, getUserId, getUserType, login, changePassword, checkOTP, resetPassword, uploadHealthRecord, getHealthRecords, removeHealthRecord, getPackage, subscribePackage, getCurrentPackage, unsubscribePackage, selectAppointment, scheduleFollowUpDoctor, scheduleFollowUpPatient, getPendingAppointments, acceptFollowUp, revokeFollowUp, checkWallet, cancelAppointment, downloadPrescription, sendMessage, getMessages, getChats, checkPatientDoctorChat };

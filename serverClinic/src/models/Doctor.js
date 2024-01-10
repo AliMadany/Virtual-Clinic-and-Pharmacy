@@ -61,6 +61,24 @@ const doctorSchema = new Schema({
         enum: ["pending", "approved", "rejected"],
         default: "pending",
         required: true
+    },
+    acceptedContract: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    doctor_id: {
+        type: Buffer,
+        required: true,
+    },
+    medical_license: {
+        type: Buffer,
+        required: true
+    },
+    medical_degree: {
+        type: Buffer,
+        required: true
+
     }
 });
 

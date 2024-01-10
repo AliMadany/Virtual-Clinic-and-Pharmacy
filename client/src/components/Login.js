@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ForgetPassword from "./ForgetPassword";
+import ForgetPasswordClinic from "./ForgetPasswordClinic";
 
 function Login() {
     const [credentials, setCredentials] = useState({
@@ -64,6 +65,8 @@ function Login() {
             // Store the token and user type in local storage or context/state management
             localStorage.setItem('token', data.token);
             localStorage.setItem('userType', data.userType);
+            localStorage.setItem('username', data.username);
+            localStorage.setItem('userId', data.userId);
     
             // Redirect based on user type
             if (data.userType === 'admin') {
@@ -116,6 +119,7 @@ function Login() {
         </form>
 
         <ForgetPassword></ForgetPassword>
+        <ForgetPasswordClinic></ForgetPasswordClinic>
         </div>
 
         
