@@ -515,9 +515,9 @@ const getPrescriptionsByDate = async (req, res) => {
 }
 
 const getPrescriptionsByDoctor = async (req, res) => {
-    const { id, doc_id } = req.params;
+    const { doc_id } = req.params;
     try {
-        const prescriptions = await perscriptionModel.find({ doctor_id: doc_id, patient_id: id });
+        const prescriptions = await perscriptionModel.find({ doctor_id: doc_id}).populate('patient_id');
         res.status(200).json(prescriptions);
     }
     catch (error) {
@@ -1064,7 +1064,7 @@ const unsubscribePackage = async (req, res) => {
         var patient = await patientModel.findById(id);
         if (family_member) {
             const index = patient.family_members.findIndex(member => member.nationalId === family_member);
-            family_members[index].health_package = null;
+            patient.family_members[index].health_package = null;
         } else {
             patient.health_package = null;
         }

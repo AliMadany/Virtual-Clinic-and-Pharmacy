@@ -124,7 +124,7 @@ app.put('/editPrescription/:id', editPrescription);
 app.delete('/removePrescription/:id', removePrescription);
 app.get('/getPrescriptionsByPatient/:id', getPrescriptionsByPatient);
 app.get('/getPrescriptionsByDate/:id/:date', getPrescriptionsByDate);
-app.get('/getPrescriptionsByDoctor/:id/:doc_id', getPrescriptionsByDoctor);
+app.get('/getPrescriptionsByDoctor/:doc_id', getPrescriptionsByDoctor);
 app.get('/getPrescriptionByStatus/:id/:status', getPrescriptionByStatus);
 app.get('/getPrescription/:id', getPrescription);
 app.get('/admins', getAdmins);
