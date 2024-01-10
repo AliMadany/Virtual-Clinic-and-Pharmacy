@@ -9,7 +9,7 @@ function PatientFamilyMembers() {
 
   const fetchFamilyMembers = () => {
     // Replace with your actual API endpoint
-    axios.get('http://localhost:3100/getFamilyMembers/65403bf85091f5dce661f3e8')
+    axios.get('http://localhost:3100/getFamilyMembers/' + localStorage.getItem('userId'))
       .then(response => {
         setFamilyMembers(response.data);
       })
@@ -34,7 +34,7 @@ function PatientFamilyMembers() {
         });
     } else {
       console.log(familyMemberData);
-      axios.post('http://localhost:3100/addFamilyMember/65403bf85091f5dce661f3e8', familyMemberData)
+      axios.post('http://localhost:3100/addFamilyMember/'+localStorage.getItem('userId'), familyMemberData)
         .then(() => {
           fetchFamilyMembers();
           setShowModal(false);

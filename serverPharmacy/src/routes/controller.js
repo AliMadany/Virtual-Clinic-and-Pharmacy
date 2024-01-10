@@ -6,6 +6,7 @@ const OTPModel = require('../models/OTP.js');
 const orderModel = require('../models/Order.js');
 const { default: mongoose } = require('mongoose');
 const nodemailer = require('nodemailer');
+const fetch =  require('node-fetch');
 
 const addPatient = async (req, res) => {
     const { name, email, username, password, date_of_birth, gender, mobile_number } = req.body;
