@@ -58,7 +58,11 @@ const pharmacistSchema = new Schema({
     },
     pharmacist_id: Buffer,
     pharmacy_degree: Buffer,
-    working_license: Buffer
+    working_license: Buffer,
+    paidThisMonth: {
+        type: Boolean,
+        default: false
+    },
 });
 
 const Pharmacist = mongoose.model('Pharmacist', pharmacistSchema, 'pharmacy_pharmacists');
