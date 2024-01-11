@@ -904,31 +904,33 @@ const outOfStockEmail = async (medicine) => {
     try {
         // send email to all approved pharmacists
         const pharmacists = await pharmacistModel.find({ status: "approved" });
+        var emails = [];
         for (const pharmacist of pharmacists) {
-            // Create a transporter using your email service details
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL,
-                    pass: process.env.PASSWORD
-                }
-            });
-            // Set up the email options
-            const mailOptions = {
-                from: process.env.EMAIL,
-                to: pharmacist.email,
-                subject: 'Medicine Out of Stock',
-                text: 'The medicine ' + medicine.name + ' is out of stock!'
-            };
-            // Send the email
-            transporter.sendMail(mailOptions, function (error, info) {
-                if (error) {
-                    console.error(error);
-                } else {
-                    console.log('Email sent: ' + info.response);
-                }
-            });
+            emails.push(pharmacist.email);
         }
+        // Create a transporter using your email service details
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+        // Set up the email options
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: emails,
+            subject: 'Medicine Out of Stock',
+            text: 'The medicine ' + medicine.name + ' is out of stock!'
+        };
+        // Send the email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
     }
     catch (error) {
         console.log(error.message);
@@ -944,7 +946,12 @@ const checkMedicinesStock = async () => {
                 item.in_stock = false;
                 meds.push(item);
                 await item.save();
-                await outOfStockEmail(item);
+                try{
+                    await addMedNotification(item._id, new Date().toISOString().slice(0, 10), new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                    await outOfStockEmail(item);
+                } catch (error) {
+                    console.log(error.message);
+                }
             }
         }
         return meds;
