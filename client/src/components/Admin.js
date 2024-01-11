@@ -30,19 +30,19 @@ function Admin() {
           <Col md={3} className="bg-light h-100">
             <Nav className="flex-column mt-3" variant="pills" defaultActiveKey="/admin/home">
               <Nav.Item>
-                <Nav.Link as={Link} to="/admin/admins">Admins</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/admin/admins">Admins</Nav.Link>
               </Nav.Item>
               <Nav.Item>
-                <Nav.Link as={Link} to="/admin/pharmacists">Pharmacists</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/admin/pharmacists">Pharmacists</Nav.Link>
               </Nav.Item>
               <Nav.Item>
-                <Nav.Link as={Link} to="/admin/patients">Patients</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/admin/patients">Patients</Nav.Link>
               </Nav.Item>
               <Nav.Item>
-                <Nav.Link as={Link} to="/admin/medicines">Medicines</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/admin/medicines">Medicines</Nav.Link>
               </Nav.Item>
               <Nav.Item>
-               <Nav.Link as={Link} to="/admin/sales">Sales</Nav.Link>
+               <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/admin/sales">Sales</Nav.Link>
               </Nav.Item>
 
 

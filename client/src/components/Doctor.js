@@ -15,6 +15,8 @@ import ChangePasswordClinic from './ChangePaswwordClinic';
 import axios from 'axios';
 import Wallet from './Wallet';
 import DoctorPrescriptions from './DoctorPrescriptions';
+import Chat from './Chat';
+import Notifications from './notifications';
 // Import your doctor components here
 // import DoctorPatients from './DoctorPatients';
 // import DoctorAppointments from './DoctorAppointments';
@@ -50,23 +52,31 @@ function Doctor() {
         <Col md={3} className="bg-light h-100">
           <Nav className="flex-column mt-3" variant="pills" defaultActiveKey="/doctor/home">
             <Nav.Item>
-              <Nav.Link as={Link} to="/doctor/edit">Edit My Info</Nav.Link>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/doctor/edit">Edit My Info</Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link as={Link} to="/doctor/appointments">Appointments</Nav.Link>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/doctor/appointments">Appointments</Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link as={Link} to="/doctor/patients">Patients</Nav.Link>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/doctor/patients">Patients</Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link as={Link} to="/doctor/prescriptions">Prescriptions</Nav.Link>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/doctor/prescriptions">Prescriptions</Nav.Link>
             </Nav.Item>
 
             <Nav.Item>
-              <Nav.Link onClick={() => setShowContractModal(true)}>View Contract</Nav.Link>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="https://meet.google.com/">Video Chat</Nav.Link>
+            </Nav.Item>
+
+
+            <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/doctor/chat">Chat</Nav.Link>
+
+            <Nav.Item>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  onClick={() => setShowContractModal(true)}>View Contract</Nav.Link>
             </Nav.Item>
 
             <Wallet></Wallet>
+            <Notifications></Notifications>
 
             <ChangePasswordClinic></ChangePasswordClinic>
             <Logout></Logout>
@@ -80,7 +90,7 @@ function Doctor() {
             <Route path="appointments" element={<DoctorAppointments />} />
             <Route path="patients" element={<DoctorPatients />} />
             <Route path="prescriptions" element={<DoctorPrescriptions />} />
-
+            <Route path="chat" element={<Chat />} />
 
             {/* <Route path="patients" element={<DoctorPatients />} />
               <Route path="appointments" element={<DoctorAppointments />} /> */}
