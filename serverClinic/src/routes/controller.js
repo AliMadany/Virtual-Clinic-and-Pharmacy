@@ -555,7 +555,7 @@ const addAppointment = async (req, res) => {
             res.status(400).json("Appointment already exists!");
         } else {
             const appointment = await appointmentModel.create({ patient_id, doctor_id, date, start_time, end_time, status: patient_id ? "accepted" : "free" });
-            const notification = await notificationModel.create({ appointment_id: appointment._id, status: "created" });
+            const notification = await notificationModel.create({ appointment_id: appointment._id, status: "new appointment" });
             // Create a transporter using your email service details
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
@@ -599,7 +599,7 @@ const editAppointment = async (req, res) => {
             return res.status(404).json({ message: "Appointment not found" });
         }
         await appointmentModel.findByIdAndUpdate(id, { patient_id, doctor_id, date, start_time, end_time, status });
-        await notificationModel.findOneAndUpdate({ appointment_id: id, status: "edited" });
+        const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment updated" });
         // Create a transporter using your email service details
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -646,8 +646,7 @@ const removeAppointment = async (req, res) => {
             return res.status(404).json({ message: "Appointment not found" });
         }
         await appointmentModel.findByIdAndDelete(id);
-        await notificationModel.findOneAndUpdate({ appointment_id: id, status: "deleted" });
-        console.log(appointment);
+        const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment canceled" });
         // Create a transporter using your email service details
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -1268,6 +1267,7 @@ const selectAppointment = async (req, res) => {
         }
         appointment.paid = true;
         await appointment.save();
+        const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment paid" });
         // Create a transporter using your email service details
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -1305,6 +1305,7 @@ const scheduleFollowUpDoctor = async (req, res) => {
         appointment.status = "confirmed";
         appointment.patient_id = patient_id;
         await appointment.save();
+        const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment follow up" });
         // Create a transporter using your email service details
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -1345,6 +1346,7 @@ const scheduleFollowUpPatient = async (req, res) => {
         appointment.status = "pending";
         appointment.patient_id = patient_id;
         await appointment.save();
+        const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment follow up requested" });
         // Create a transporter using your email service details
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -1398,6 +1400,7 @@ const acceptFollowUp = async (req, res) => {
         } else {
             appointment.status = "accepted";
             await appointment.save();
+            const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment follow up accepted" });
             // Create a transporter using your email service details
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
@@ -1442,6 +1445,7 @@ const revokeFollowUp = async (req, res) => {
         } else {
             appointment.status = "revoked";
             await appointment.save();
+            const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment follow up rejected" });
             // Create a transporter using your email service details
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
@@ -1498,12 +1502,6 @@ const checkWallet = async (req, res) => {
 const cancelAppointment = async (req, res) => {
     const { id, user } = req.params;
     try {
-        const appointment = await appointmentModel.findById(id);
-        if (!appointment) {
-            return res.status(404).json({ message: "Appointment not found" });
-        }
-        await appointmentModel.findByIdAndDelete(id);
-        await notificationModel.findOneAndUpdate({ appointment_id: id, status: "canceled" });
         if (appointment.paid === true) {
             if (user === "patient") {
                 if (appointment.date === now.date || (appointment.date === now.date + 1 && appointment.start_time < now.time)) {
@@ -1532,6 +1530,7 @@ const cancelAppointment = async (req, res) => {
                 res.status(200).json({ message: "Appointment canceled successfully" });
             }
         }
+        const notification = await notificationModel.create({ appointment_id: appointment._id, status: "appointment canceled" });
         // Create a transporter using your email service details
         const transporter = nodemailer.createTransport({
             service: 'gmail',
