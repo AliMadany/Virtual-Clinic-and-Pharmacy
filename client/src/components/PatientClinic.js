@@ -19,6 +19,7 @@ import Logout from './Logout';
 import ChangePasswordClinic from './ChangePaswwordClinic';
 import Wallet from './Wallet';
 import Chat from './Chat';
+import Notifications from './notifications';
 // Import your doctor components here
 // import DoctorPatients from './DoctorPatients';
 // import DoctorAppointments from './DoctorAppointments';
@@ -34,19 +35,22 @@ function PatientClinic() {
           <Col md={3} className="bg-light h-100">
             <Nav className="flex-column mt-3" variant="pills" defaultActiveKey="/doctor/home">
               <Nav.Item>
-                <Nav.Link as={Link} to="/patient-clinic/doctors">Doctors</Nav.Link>
-                <Nav.Link as={Link} to="/patient-clinic/prescriptions">Prescriptions</Nav.Link>
-                <Nav.Link as={Link} to="/patient-clinic/family-members">Family Members</Nav.Link>
-                <Nav.Link as={Link} to="/patient-clinic/appointments">Appointments</Nav.Link>
-                <Nav.Link as={Link} to="/patient-clinic/Patient-Packages">Health Pakages</Nav.Link>
-                <Nav.Link as={Link} to="/patient-clinic/medical-history">Medical History</Nav.Link>
-                <Nav.Link as={Link} to="/patient-clinic/chat">Chat</Nav.Link>
-              
+
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient-clinic/doctors">Doctors</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'   as={Link} to="/patient-clinic/prescriptions">Prescriptions</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient-clinic/family-members">Family Members</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient-clinic/appointments">Appointments</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient-clinic/Patient-Packages">Health Pakages</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient-clinic/medical-history">Medical History</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient-clinic/chat">Chat</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="https://meet.google.com/">Video Chat</Nav.Link>
+
 
 
               </Nav.Item>
 
               <Wallet></Wallet>
+              <Notifications></Notifications>
 
               <ChangePasswordClinic></ChangePasswordClinic>
               <Logout> </Logout>

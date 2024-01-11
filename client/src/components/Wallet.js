@@ -26,7 +26,7 @@ function Wallet() {
 
   return (
     <Nav.Item>
-      <Nav.Link>Wallet Balance: ${wallet}</Nav.Link>
+      <Nav.Link className='mb-1 mt-1 ms-1 me-1' >Wallet Balance: ${wallet}</Nav.Link>
     </Nav.Item>
   );
 }

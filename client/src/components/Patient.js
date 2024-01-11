@@ -20,6 +20,7 @@ import ChangePassword from './ChangePassword';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBell } from '@fortawesome/free-solid-svg-icons';
+import Chat from './Chat';
 
 
 function Patient() {
@@ -161,7 +162,7 @@ function Patient() {
           <Nav className="flex-column mt-3" variant="pills" defaultActiveKey="/admin/home">
 
             <Nav.Item>
-              <Nav.Link as={Link} to="/patient/medicines">Medicines</Nav.Link>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient/medicines">Medicines</Nav.Link>
             </Nav.Item>
             <Nav.Item>
               <Button onClick={() => setShowModalAddress(true)}>Manage My Addresses</Button>
@@ -170,9 +171,10 @@ function Patient() {
               <Button onClick={() => { setShowModalOrders(true); fetchOrders(); }}>Orders</Button>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link as={Link} to="/patient/PatientPrescriptions">Prescriptions</Nav.Link>
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient/PatientPrescriptions">Prescriptions</Nav.Link>
             </Nav.Item>
             
+            <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/patient/chat">Chat</Nav.Link>
 
             <ChangePassword></ChangePassword>
             <Logout> </Logout>
@@ -185,7 +187,7 @@ function Patient() {
           <Routes>
             <Route path="medicines" element={<Medicines role="patient" />} />
             <Route path="PatientPrescriptions" element={<PatientPrescriptions role="Patient" />} />
-            
+            <Route path="chat" element={<Chat/>}/>
 
 
 

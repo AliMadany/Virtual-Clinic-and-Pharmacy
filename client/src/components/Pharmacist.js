@@ -19,6 +19,7 @@ import Medicines from './Medicines';
 import Logout from './Logout';
 import ChangePassword from './ChangePassword';
 import SalesReport from './SalesReport'; 
+import Chat from './Chat';
 
 
 function Pharmacist() {
@@ -59,12 +60,12 @@ function Pharmacist() {
           <Col md={3} className="bg-light h-100">
             <Nav className="flex-column mt-3" variant="pills" defaultActiveKey="/admin/home">
               <Nav.Item>
-                <Nav.Link as={Link} to="/pharmacist/medicines">Medicines</Nav.Link>
+                <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/pharmacist/medicines">Medicines</Nav.Link>
               </Nav.Item>
               <Nav.Item>
-               <Nav.Link as={Link} to="/Pharmacist/sales">Sales</Nav.Link>
+               <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/Pharmacist/sales">Sales</Nav.Link>
               </Nav.Item>
-           
+              <Nav.Link className='mb-1 mt-1 ms-1 me-1'  as={Link} to="/Pharmacist/chat">Chat</Nav.Link>
 
 
 
@@ -80,6 +81,7 @@ function Pharmacist() {
             <Routes>
               <Route path="medicines" element={<Medicines role="pharmacist"/>} />
               <Route path="sales" element={<SalesReport />} />
+              <Route path="chat" element={<Chat />} />
 
               {/* ... Other admin components can go here */}
               {/* <Route path="*" element={<h1>Pharmacist 404 Not Found</h1>} /> */}
