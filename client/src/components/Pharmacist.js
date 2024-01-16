@@ -110,7 +110,7 @@ const [showNotifications, setShowNotifications] = useState(false);
       </div>
     )}
   </div>
-</div>
+</div> 
         <Row className="h-100">
           <Col md={3} className="bg-light h-100">
             <Nav className="flex-column mt-3" variant="pills" defaultActiveKey="/admin/home">
